@@ -3,6 +3,6 @@ Recursively create a CSV with details of all movie and TV media in a directory. 
 
 # Usage
 ## Movie lists
-`./movie_list.sh dir/ > ./movie_list.cav
+`./movie_list.sh dir/ > ./movie_list.csv`
 ## TV lists
-`./tv_list.sh dir/ > ./tv_list.cav
+`./tv_list.sh dir/ > ./tv_list.csv`
