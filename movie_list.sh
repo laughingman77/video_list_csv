@@ -26,9 +26,16 @@ SIZE=`stat -c "%s" ${f}`
     SIZEG=`echo "scale=2; ${SIZEM} / 1024" | bc -l`
     FILENAME=`echo "${f##*/}"`
     RESOLUTION=`echo $FILENAME | grep -oP '\d+p'`
-    YEAR=`echo $FILENAME | sed -r 's/^[a-zA-Z\.\ ]*([0-9]{4}).*/\1/'`
+    YEAR=`echo $FILENAME | grep -oP '\d{4}' | head -1`
     NAME=`echo $FILENAME | sed -r 's/[0-9]{4}.*$//' | sed -r 's/\./\ /g'`
-    OUTPUT=`echo ${NAME},${YEAR},${RESOLUTION},${SIZEG},${SIZEM},${FILENAME}`";"$OUTPUT
+    TYPE=""
+    if echo "$FILENAME" | grep -iqF "remux"; then
+    	TYPE="remux"
+    fi
+    if echo "$FILENAME" | grep -iqF "web-dl"; then
+    	TYPE="web-dl"
+    fi
+    OUTPUT=`echo ${NAME},${YEAR},${RESOLUTION},${TYPE},${SIZEG},${SIZEM},${FILENAME}`";"$OUTPUT
 done
 
 # Generate disk usage stats
@@ -36,7 +43,7 @@ IFS='
 ' # split on newline only. Also IFS=$'\n' in bash/ksh93/zsh/mksh
 set -o noglob  # disable globbin
 DISK_USAGE=($(df -h --output=size,used,avail $DIR | column -t))
-OUTPUT="Movie,Year,Resolutioon,Size (GB),Size (MB),Filename;"$OUTPUT
+OUTPUT="Movie,Year,Resolution,Type,Size (GB),Size (MB),Filename;"$OUTPUT
 OUTPUT=`echo "${DISK_USAGE[1]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g"`";;"$OUTPUT
 OUTPUT=`echo "${DISK_USAGE[0]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g"`";"$OUTPUT
 

@@ -1,0 +1,4 @@
+*.bfproject
+*.csv
+.~lock.*#
+*~
