@@ -15,7 +15,7 @@ This format is broadly compatible with [kodi][kodi] and [plex][plex]. Howver the
 
 ## Movies
 
-```
+```text
 Movie.Name.Year..General.text.ext
 Movie Name (Year) General text.ext
 Movie Name (Year) [tmdbid-...] General text.ext
@@ -36,7 +36,7 @@ Movie Name (Year) [tmdbid-...] General text.ext
 
 **Note:** The capitalisation of TV shows within a season ,ust be the same as the containing TV show ditectory.
 
-```
+```text
 ├── TV Show
 │   ├── Season 1
 │   │  ├── TV Show S01E01 general text.ext
@@ -63,9 +63,13 @@ Movie Name (Year) [tmdbid-...] General text.ext
 1. Sort the individual archive file lines as you wish, for readability.
 
 ## Movie lists
-`./movie_list.sh archive_dir > ./movie_list.csv`
+```bash
+./movie_list.sh directory > ./archive.csv
+```
 ## TV lists
-`./tv_list.sh archive_dir > ./tv_list.csv`
+```bash
+./tv_list.sh directory > ./archive.csv
+```
 
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/
