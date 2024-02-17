@@ -20,11 +20,6 @@ OUTPUT=""
 
 # Generate output from path and size using: `stat -c "%s" filepath`
 for f in `find ${DIR} -type f -regex ".*\.${TYPES_RE}"`; do
-    SIZE=`stat -c "%s" "${f}"`
-    SIZEK=`echo "scale=2; ${SIZE} / 1024" | bc -l`
-    SIZEM=`echo "scale=2; ${SIZEK} / 1024" | bc -l`
-    SIZEG=`echo "scale=2; ${SIZEM} / 1024" | bc -l`
-    FILENAME=`echo "${f##*/}"`
     EPISODE=`echo "$FILENAME" | sed -r 's/.*S[0-9]{2}E([0-9]{2}).*/\1/I'`
     if [ "$EPISODE" == "01" ]; then
         SEASON=`echo "$FILENAME" | sed -r 's/.*S([0-9]{2})E[0-9]{2}.*/\1/I'`
@@ -36,8 +31,21 @@ for f in `find ${DIR} -type f -regex ".*\.${TYPES_RE}"`; do
     else
         SERIES=""
     fi
+    RESOLUTION=`echo $FILENAME | grep -oP '\d+p'`
+    TYPE=""
+    if echo "$FILENAME" | grep -iqF "remux"; then
+    	TYPE="remux"
+    fi
+    if echo "$FILENAME" | grep -iqF "web-dl"; then
+    	TYPE="web-dl"
+    fi
+    SIZE=`stat -c "%s" "${f}"`
+    SIZEK=`echo "scale=2; ${SIZE} / 1024" | bc -l`
+    SIZEM=`echo "scale=2; ${SIZEK} / 1024" | bc -l`
+    SIZEG=`echo "scale=2; ${SIZEM} / 1024" | bc -l`
+    FILENAME=`echo "${f##*/}"`
     LINE=""
-    LINE=$LINE`echo ${SERIES},${SEASON},${EPISODE},${SIZEG},${SIZEM},${FILENAME}`
+    LINE=$LINE`echo ${SERIES},${SEASON},${EPISODE},${RESOLUTION},${TYPE},${SIZEG},${SIZEM},${FILENAME}`
     OUTPUT=$LINE";"$OUTPUT
 done
 
