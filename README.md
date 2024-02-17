@@ -59,7 +59,8 @@ Movie Name (Year) [tmdbid-...] General text.ext
     1. `movie_list.sh` for a movie archive'
     1. `tv_list.sh` for a TV show archive.
 1. Import the result CSV into a spreadseet.
-1. Copy the cells from the omported CSV data into your new sheet at cell `A4`
+1. Copy the cells from the omported CSV data into your new sheet at cell `A4`.
+1. Sort the individual archive file lines as you wish, for readability.
 
 ## Movie lists
 `./movie_list.sh archive_dir > ./movie_list.csv`
