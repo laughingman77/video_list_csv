@@ -13,7 +13,7 @@ for t in "${TYPES[@]:1:${#TYPES[*]}}"; do
 done
 TYPES_RE="${TYPES_RE}\\)"
 
-# Set the field seperator to newline instead of space
+# Set the field separator to newline instead of space
 SAVEIFS=$IFS
 IFS=$(echo -en "\n\b")
 
@@ -51,6 +51,5 @@ OUTPUT=`echo "${DISK_USAGE[0]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g"`";"$OUTPU
 # Reset IFS
 IFS=$SAVEIFS
 
-# Reverse numeric sort the output and replace ; with \n for printing
+# Replace ; with \n for printing
 echo $OUTPUT | tr ';' '\n'
-
