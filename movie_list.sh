@@ -35,7 +35,7 @@ SIZE=`stat -c "%s" ${f}`
     if echo "$FILENAME" | grep -iqF "web-dl"; then
     	TYPE="web-dl"
     fi
-    OUTPUT=`echo ${NAME},${YEAR},${RESOLUTION},${TYPE},${SIZEG},${SIZEM},${FILENAME}`";"$OUTPUT
+    OUTPUT=`echo \"${NAME}\",${YEAR},${RESOLUTION},${TYPE},${SIZEG},${SIZEM},\"${FILENAME}\";"`$OUTPUT
 done
 
 # Generate disk usage stats
