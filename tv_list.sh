@@ -1,5 +1,14 @@
 #!/bin/bash
 
+# Import .env vars
+if [ ! -e .env ]; then
+    echo >&2 "Please configure the .env file"
+    exit 1
+fi
+set -o allexport
+source .env
+set +o allexport
+
 # fill with more extensions or have it as a cmd line arg
 TYPES=( m2ts webm mkv flv vob ogv ogg rrc gifv mng mov avi qt wmv yuv asf amv mp4 m4p m4v mpg mp2 mpeg mpe mpv m4v svi 3gp 3g2 mxf roq nsv flv f4v f4p f4a f4b mod )
 
@@ -20,9 +29,14 @@ OUTPUT=""
 
 # Generate output from path and size using: `stat -c "%s" filepath`
 for f in `find ${DIR} -type f -regex ".*\.${TYPES_RE}"`; do
-    EPISODE=`echo "$FILENAME" | sed -r 's/.*S[0-9]{2}E([0-9]{2}).*/\1/I'`
+    SIZE=`stat -c "%s" "${f}"`
+    SIZEK=`echo "scale=2; ${SIZE} / 1024" | bc -l`
+    SIZEM=`echo "scale=2; ${SIZEK} / 1024" | bc -l`
+    SIZEG=`echo "scale=2; ${SIZEM} / 1024" | bc -l`
+    FILENAME=`echo "${f##*/}"`
+    EPISODE=`echo "$FILENAME" | sed -r 's/^.*S[0-9]{2}E([0-9]{2}).*$/\1/I' | sed -r 's/\./\ /g'`
     if [ "$EPISODE" == "01" ]; then
-        SEASON=`echo "$FILENAME" | sed -r 's/.*S([0-9]{2})E[0-9]{2}.*/\1/I'`
+        SEASON=`echo "$FILENAME" | sed -r 's/^.*S([0-9]{2})E[0-9]{2}.*$/\1/I'`
     else
         SEASON=""
     fi
@@ -32,6 +46,18 @@ for f in `find ${DIR} -type f -regex ".*\.${TYPES_RE}"`; do
         SERIES=""
     fi
     RESOLUTION=`echo $FILENAME | grep -oP '\d+p'`
+    if [[ -z "$RESOLUTION" && "$DETECT_RESOLUTION" == 1 && -f "$f" ]]; then
+        RES=`ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$f" | jq '.streams[0] .width'`
+        if [ -z "$RES" ]; then
+            RESOLUTION=""
+        else
+            [ "$RES" -le 7680 ] && RESOLUTION="4320p"
+            [ "$RES" -le 3840 ] && RESOLUTION="2160p"
+            [ "$RES" -le 1920 ] && RESOLUTION="1080p"
+            [ "$RES" -le 720 ] && RESOLUTION="720p"
+            [ "$RES" -le 640 ] && RESOLUTION="480p"
+        fi
+    fi
     TYPE=""
     if echo "$FILENAME" | grep -iqF "remux"; then
     	TYPE="remux"
@@ -39,14 +65,7 @@ for f in `find ${DIR} -type f -regex ".*\.${TYPES_RE}"`; do
     if echo "$FILENAME" | grep -iqF "web-dl"; then
     	TYPE="web-dl"
     fi
-    SIZE=`stat -c "%s" "${f}"`
-    SIZEK=`echo "scale=2; ${SIZE} / 1024" | bc -l`
-    SIZEM=`echo "scale=2; ${SIZEK} / 1024" | bc -l`
-    SIZEG=`echo "scale=2; ${SIZEM} / 1024" | bc -l`
-    FILENAME=`echo "${f##*/}"`
-    LINE=""
-    LINE=$LINE`echo ${SERIES},${SEASON},${EPISODE},${RESOLUTION},${TYPE},${SIZEG},${SIZEM},${FILENAME}`
-    OUTPUT=$LINE";"$OUTPUT
+    OUTPUT=`echo "\"$SERIES\",$SEASON,$EPISODE,$RESOLUTION,$TYPE,$SIZEG,$SIZEM,\"$FILENAME\";"`$OUTPUT``
 done
 
 # Generate disk usage stats
@@ -54,7 +73,7 @@ IFS='
 ' # split on newline only. Also IFS=$'\n' in bash/ksh93/zsh/mksh
 set -o noglob  # disable globbin
 DISK_USAGE=($(df -h --output=size,used,avail $DIR | column -t))
-OUTPUT="Series,Season,Episode,Size (GB),Size (MB),Filename;"$OUTPUT
+OUTPUT="Series,Season,Episode,Resolution,Type,Size (GB),Size (MB),Filename;"$OUTPUT
 OUTPUT=`echo "${DISK_USAGE[1]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g"`";;"$OUTPUT
 OUTPUT=`echo "${DISK_USAGE[0]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g"`";"$OUTPUT
 
