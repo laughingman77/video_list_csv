@@ -1,5 +1,13 @@
 #!/bin/bash
 
+# Import .env vars
+if [ ! -e .env ]; then
+    echo >&2 "Please configure the .env file"
+    exit 1
+fi
+set -o allexport
+source .env
+
 # fill with more extensions or have it as a cmd line arg
 TYPES=( m2ts webm mkv flv vob ogv ogg rrc gifv mng mov avi qt wmv yuv asf amv mp4 m4p m4v mpg mp2 mpeg mpe mpv m4v svi 3gp 3g2 mxf roq nsv flv f4v f4p f4a f4b mod )
 OUTPUT_FILE="movie_list.csv"
@@ -26,6 +34,19 @@ SIZE=`stat -c "%s" ${f}`
     SIZEG=`echo "scale=2; ${SIZEM} / 1024" | bc -l`
     FILENAME=`echo "${f##*/}"`
     RESOLUTION=`echo $FILENAME | grep -oP '\d+p'`
+    if [[ -z "$RESOLUTION" && "$DETECT_RESOLUTION" == 1 && -f "$f" ]]; then
+        RES=`ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$f" | jq '.streams[0] .width'`
+        if [ -z "$RES" ]; then
+            RESOLUTION=""
+        else
+            [ "$RES" -le 7680 ] && RESOLUTION="4320p"
+            [ "$RES" -le 3840 ] && RESOLUTION="2160p"
+            [ "$RES" -le 1920 ] && RESOLUTION="1080p"
+            [ "$RES" -le 720 ] && RESOLUTION="720p"
+            [ "$RES" -le 640 ] && RESOLUTION="480p"
+        fi
+    fi
+    TYPE=""
     YEAR=`echo $FILENAME | grep -oP '\d{4}' | head -1`
     NAME=`echo $FILENAME | sed -r 's/[0-9]{4}.*$//' | sed -r 's/\./\ /g'`
     TYPE=""
@@ -35,7 +56,7 @@ SIZE=`stat -c "%s" ${f}`
     if echo "$FILENAME" | grep -iqF "web-dl"; then
     	TYPE="web-dl"
     fi
-    OUTPUT=`echo \"${NAME}\",${YEAR},${RESOLUTION},${TYPE},${SIZEG},${SIZEM},\"${FILENAME}\";"`$OUTPUT
+    OUTPUT=`echo "\"${NAME}\",${YEAR},${RESOLUTION},${TYPE},${SIZEG},${SIZEM},\"${FILENAME}\";"`$OUTPUT
 done
 
 # Generate disk usage stats
