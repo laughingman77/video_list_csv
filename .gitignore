@@ -20,7 +20,7 @@ $RECYCLE.BIN/
 # Editor files
 *~
 .~lock.*#
-
+*.swp
 
 *.csv
 .env
