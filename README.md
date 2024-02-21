@@ -36,7 +36,7 @@ cp example.env .env
 
 ## Options
 
-* `DETECT_RESOLUTION` - (0 or 1) If the video resolution is not in the filename, the automatically detect it.
+* `movie_columns` - (0 or 1) If the video resolution is not in the filename, the automatically detect it.
 
 # Directory and Filenames
 

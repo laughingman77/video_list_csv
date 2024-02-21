@@ -1,5 +1,10 @@
 #!/bin/bash
 
+source ./functions/title.sh
+source ./functions/year.sh
+source ./functions/resolution.sh
+source ./functions/release_type.sh
+
 # Import .env vars
 if [ ! -e .env ]; then
     echo >&2 "Please configure the .env file"
@@ -9,77 +14,53 @@ set -o allexport
 source .env
 set +o allexport
 
-# fill with more extensions or have it as a cmd line arg
-TYPES=( m2ts webm mkv flv vob ogv ogg rrc gifv mng mov avi qt wmv yuv asf amv mp4 m4p m4v mpg mp2 mpeg mpe mpv m4v svi 3gp 3g2 mxf roq nsv flv f4v f4p f4a f4b mod )
+extensions=( m2ts webm mkv flv vob ogv ogg rrc gifv mng mov avi qt wmv yuv asf amv mp4 m4p m4v mpg mp2 mpeg mpe mpv m4v svi 3gp 3g2 mxf roq nsv flv f4v f4p f4a f4b mod )
 
-DIR=$1
+dir=$1
 
 # Create a regex of the extensions for the find command
-TYPES_RE="\\("${TYPES[0]}
-for t in "${TYPES[@]:1:${#TYPES[*]}}"; do
-    TYPES_RE="${TYPES_RE}\\|${t}"
+extensions_re="\\("${extensions[0]}
+for t in "${extensions[@]:1:${#extensions[*]}}"; do
+    extensions_re="${extensions_re}\\|${t}"
 done
-TYPES_RE="${TYPES_RE}\\)"
+extensions_re="${extensions_re}\\)"
 
 # Set the field seperator to newline instead of space
-SAVEIFS=$IFS
+saveifs=$IFS
 IFS=$(echo -en "\n\b")
 
-OUTPUT=""
+output=""
 
-# Generate output from path and size using: `stat -c "%s" filepath`
-for f in `find ${DIR} -type f -regex ".*\.${TYPES_RE}"`; do
-    SIZE=`stat -c "%s" "${f}"`
-    SIZEK=`echo "scale=2; ${SIZE} / 1024" | bc -l`
-    SIZEM=`echo "scale=2; ${SIZEK} / 1024" | bc -l`
-    SIZEG=`echo "scale=2; ${SIZEM} / 1024" | bc -l`
-    FILENAME=`echo "${f##*/}"`
-    EPISODE=`echo "$FILENAME" | sed -r 's/^.*S[0-9]{2}E([0-9]{2}).*$/\1/I' | sed -r 's/\./\ /g'`
-    if [ "$EPISODE" == "01" ]; then
-        SEASON=`echo "$FILENAME" | sed -r 's/^.*S([0-9]{2})E[0-9]{2}.*$/\1/I'`
-    else
-        SEASON=""
-    fi
-    if [ "$SEASON" == "01" ]; then
-        SERIES=`echo $FILENAME | sed -r 's/S[0-9]{2}E[0-9]{2}.*$//I' | sed -r 's/\./\ /g'`
-    else
-        SERIES=""
-    fi
-    RESOLUTION=`echo $FILENAME | grep -oP '\d+p'`
-    if [[ -z "$RESOLUTION" && "$DETECT_RESOLUTION" == 1 && -f "$f" ]]; then
-        RES=`ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$f" | jq '.streams[0] .width'`
-        if [ -z "$RES" ]; then
-            RESOLUTION=""
-        else
-            [ "$RES" -le 7680 ] && RESOLUTION="4320p"
-            [ "$RES" -le 3840 ] && RESOLUTION="2160p"
-            [ "$RES" -le 1920 ] && RESOLUTION="1080p"
-            [ "$RES" -le 720 ] && RESOLUTION="720p"
-            [ "$RES" -le 640 ] && RESOLUTION="480p"
-        fi
-    fi
-    TYPE=""
-    if echo "$FILENAME" | grep -iqF "remux"; then
-    	TYPE="remux"
-    fi
-    if echo "$FILENAME" | grep -iqF "web-dl"; then
-    	TYPE="web-dl"
-    fi
-    OUTPUT=`echo "\"$SERIES\",$SEASON,$EPISODE,$RESOLUTION,$TYPE,$SIZEG,$SIZEM,\"$FILENAME\";"`$OUTPUT``
+# Generate output from path and size using: $(stat -c "%s" filepath)
+for f in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
+    size=$(stat -c "%s" "${f}")
+    size_k=$(echo "scale=2; ${size} / 1024" | bc -l)
+    size_m=$(echo "scale=2; ${size_k} / 1024" | bc -l)
+    sizeG=$(echo "scale=2; ${size_m} / 1024" | bc -l)
+    filename=$(echo "${f##*/}")
+    episode=$(echo "$filename" | sed -r 's/^.*S[0-9]{2}E([0-9]{2}).*$/\1/I' | sed -r 's/\./\ /g')
+    season=""
+    [ "$episode" == "01" ] && season=$(echo "$filename" | sed -r 's/^.*S([0-9]{2})E[0-9]{2}.*$/\1/I')
+    SERIES=""
+    [ "$season" == "01" ] && SERIES=$(title $filename)
+    resolution=$(resolution $filename $f $detect_resolution)
+    year=$(year $filename)
+    release_type=$(release_type $filename)
+    output=$(echo "\"$SERIES\",$year,$season,$episode,$resolution,$release_type,$size_g,$size_m,\"$filename\";"$output)
 done
 
 # Generate disk usage stats
 IFS='
 ' # split on newline only. Also IFS=$'\n' in bash/ksh93/zsh/mksh
 set -o noglob  # disable globbin
-DISK_USAGE=($(df -h --output=size,used,avail $DIR | column -t))
-OUTPUT="Series,Season,Episode,Resolution,Type,Size (GB),Size (MB),Filename;"$OUTPUT
-OUTPUT=`echo "${DISK_USAGE[1]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g"`";;"$OUTPUT
-OUTPUT=`echo "${DISK_USAGE[0]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g"`";"$OUTPUT
+disk_usage=($(df -h --output=size,used,avail $dir | column -t))
+output="Series,Year,Season,Episode,Resolution,Release Type,Size (GB),Size (MB),Filename;"$output
+output=$(echo "${disk_usage[1]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g")";;"$output
+output=$(echo "${disk_usage[0]}" | sed -e "s/ /,/g" | sed -e "s/,,/,/g")";"$output
 
 # Reset IFS
-IFS=$SAVEIFS
+IFS=$saveifs
 
 # Reverse numeric sort the output and replace ; with \n for printing
-echo $OUTPUT | tr ';' '\n'
+echo $output | tr ';' '\n'
 

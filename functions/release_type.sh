@@ -4,37 +4,37 @@
 # @see https://en.wikipedia.org/wiki/Pirated_movie_release_types
 # $1 filename
 release_type() {
-    local TEMP=$(echo "$1" | sed -r 's/\./\ /g' | grep -oP '\ \d{4}\ .*')
-    if [ -z "$TEMP" ]; then
-        TEMP=$(echo "$1" | sed -r 's/\./\ /g' | grep -oP '\ \-\ .*')
+    local temp=$(echo "$1" | sed -r 's/\./\ /g' | grep -oP '\ \d{4}\ .*')
+    if [ -z "$temp" ]; then
+        temp=$(echo "$1" | sed -r 's/\./\ /g' | grep -oP '\ \-\ .*')
     fi
-    local RESULT=""
+    local result=""
     # Extremely rare
-    [ $(echo "$TEMP" | grep -i "\ wp\ \|\ workprint\ ") ] && RESULT="Workprint"
-    [ $(echo "$TEMP" | grep -i "\ tc\ \|\ hdtc\ \|\ telecine\ ") ] && RESULT="Telecine"
+    [ $(echo "$temp" | grep -i "\ wp\ \|\ workprint\ ") ] && result="Workprint"
+    [ $(echo "$temp" | grep -i "\ tc\ \|\ hdtc\ \|\ telecine\ ") ] && result="Telecine"
     # Very rare
-    [ $(echo "$TEMP" | grep -i "\ ppv\ \|\ ppvrip\ ") ] && RESULT="Pay-Per-View Rip"
-    [ $(echo "$TEMP" | grep -i "\ vodrip\ \|\ vodr\ ") ] && RESULT="VODRip"
+    [ $(echo "$temp" | grep -i "\ ppv\ \|\ ppvrip\ ") ] && result="Pay-Per-View Rip"
+    [ $(echo "$temp" | grep -i "\ vodrip\ \|\ vodr\ ") ] && result="VODRip"
     # Rare
-    [ $(echo "$TEMP" | grep -i "\ ddc\ ") ] && RESULT="Digital Distribution Copy"
-    [ $(echo "$TEMP" | grep -i "\ r5\ \|\ r5\ line\ \|\ r5.ac3.5.1.hq\ ") ] && RESULT="R5"
-    [ $(echo "$TEMP" | grep -i "\ web-cap\ \|\ webcap\ \|\ web\ cap\ ") ] && RESULT="WEBCap"
+    [ $(echo "$temp" | grep -i "\ ddc\ ") ] && result="Digital Distribution Copy"
+    [ $(echo "$temp" | grep -i "\ r5\ \|\ r5\ line\ \|\ r5.ac3.5.1.hq\ ") ] && result="R5"
+    [ $(echo "$temp" | grep -i "\ web-cap\ \|\ webcap\ \|\ web\ cap\ ") ] && result="WEBCap"
     # Sort of rare
-    [ $(echo "$TEMP" | grep -i "\ dvdrip\ \|\ dvdmux\ ") ] && RESULT="DVD-Rip"
+    [ $(echo "$temp" | grep -i "\ dvdrip\ \|\ dvdmux\ ") ] && result="DVD-Rip"
     # Uncommon
-    [ $(echo "$TEMP" | grep -i "\ ts\ \|\ hdts\ \|\ teleync\ \|\ pdvd\ \|\ predvdrip\ ") ] && RESULT="Telesync"
-    [ $(echo "$TEMP" | grep -i "\ scr\ \|\ screener\ \|\ dvdscr\ \|\ dvdscreener\ \|\ bdscr\ \|\ webscreener\ ") ] && RESULT="Screener"
+    [ $(echo "$temp" | grep -i "\ ts\ \|\ hdts\ \|\ teleync\ \|\ pdvd\ \|\ predvdrip\ ") ] && result="Telesync"
+    [ $(echo "$temp" | grep -i "\ scr\ \|\ screener\ \|\ dvdscr\ \|\ dvdscreener\ \|\ bdscr\ \|\ webscreener\ ") ] && result="Screener"
     # Common
-    [ $(echo "$TEMP" | grep -i "\ cam-tip\ \|\ cam\ \|\ hdcam\ ") ] && RESULT="Cam"
-    [ $(echo "$TEMP" | grep -i "\ dvdr\ \|\ dvd-full\ \|\ full-rip\ \|\ iso\ rip\ \|\ lossless\ rip\ \|\ untouched\ rip\ \|\ dvd-5\ \|\ dvd-9\ ") ] && RESULT="DVD-R"
-    [ $(echo "$TEMP" | grep -i "\ dsr\ \|\ dsrip\ \|\ satrip\ \|\ dthrip\ \|\ dvbrip\ \|\ hdtv\ \|\ pdtv\ \|\ dtvrip\ \|\ tvrip\ \|\ hdtvrip\ ") ] && RESULT="HDTV"
-    [ $(echo "$TEMP" | grep -i "\ hc\ \|\ hd-rip\ ") ] && RESULT="HC HD-Rip"
-    [ $(echo "$TEMP" | grep -i "\ hdrip\ \|\ web-dlrip\ ") ] && RESULT="HDRip"
-    [ $(echo "$TEMP" | grep -i "\ webrip\ \|\ web\ rip\ \|\ WEB-Rip\ ") ] && RESULT="WEBRip"
-    [ $(echo "$TEMP" | grep -i "\ webdl\ \|\ web\ dl\ \|\ web-dl\ \|\ web\ \|\ webrip\ ") ] && RESULT="Web-DL"
-    [ $(echo "$TEMP" | grep -i "\ blu-ray\ \|\ bluray\ \|\ bdiso\ \|\ complete\ bluray\ ") ] && RESULT="Blu-Ray"
-    [ $(echo "$TEMP" | grep -i "\ bdrip\ \|\ bd50\ \|\ bd66\ \|\ bd100\ \|\ bd9\ ") ] && RESULT="BDRip"
-    [ $(echo "$TEMP" | grep -i "\ brip\ \|\ brrip\ \|\ bdr\ \|\ bd25\ \|\ bd5\ \|\ dbmv\ ") ] && RESULT="BRRip"
-    [ $(echo "$TEMP" | grep -i "remux") ] && RESULT="Remux"
-    echo "$RESULT"
+    [ $(echo "$temp" | grep -i "\ cam-tip\ \|\ cam\ \|\ hdcam\ ") ] && result="Cam"
+    [ $(echo "$temp" | grep -i "\ dvdr\ \|\ dvd-full\ \|\ full-rip\ \|\ iso\ rip\ \|\ lossless\ rip\ \|\ untouched\ rip\ \|\ dvd-5\ \|\ dvd-9\ ") ] && result="DVD-R"
+    [ $(echo "$temp" | grep -i "\ dsr\ \|\ dsrip\ \|\ satrip\ \|\ dthrip\ \|\ dvbrip\ \|\ hdtv\ \|\ pdtv\ \|\ dtvrip\ \|\ tvrip\ \|\ hdtvrip\ ") ] && result="HDTV"
+    [ $(echo "$temp" | grep -i "\ hc\ \|\ hd-rip\ ") ] && result="HC HD-Rip"
+    [ $(echo "$temp" | grep -i "\ hdrip\ \|\ web-dlrip\ ") ] && result="HDRip"
+    [ $(echo "$temp" | grep -i "\ webrip\ \|\ web\ rip\ \|\ WEB-Rip\ ") ] && result="WEBRip"
+    [ $(echo "$temp" | grep -i "\ webdl\ \|\ web\ dl\ \|\ web-dl\ \|\ web\ \|\ webrip\ ") ] && result="Web-DL"
+    [ $(echo "$temp" | grep -i "\ blu-ray\ \|\ bluray\ \|\ bdiso\ \|\ complete\ bluray\ ") ] && result="Blu-Ray"
+    [ $(echo "$temp" | grep -i "\ bdrip\ \|\ bd50\ \|\ bd66\ \|\ bd100\ \|\ bd9\ ") ] && result="BDRip"
+    [ $(echo "$temp" | grep -i "\ brip\ \|\ brrip\ \|\ bdr\ \|\ bd25\ \|\ bd5\ \|\ dbmv\ ") ] && result="BRRip"
+    [ $(echo "$temp" | grep -i "remux") ] && result="Remux"
+    echo "$result"
 }
