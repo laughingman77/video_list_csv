@@ -81,7 +81,12 @@ By configuring the `tv_columns` and `movie_columns`, you can dictate which colum
 
 The script assumes the directory and filenaming structure for [Jellyfin][jellyfin].
 
-This format is broadly compatible with [kodi][kodi] and [plex][plex]. However the main differences will be with:
+All TV episodes should be in the format:
+
+* S01E01
+* s01e01
+
+This script is broadly compatible with [kodi][kodi] and [plex][plex]. However the main differences are be with:
 
 * different movie versions, where [jellyfin][jellyfin] uses the ` - ` to separate version text from filename text.
 * `tmdbid` and `imdbid` codes.

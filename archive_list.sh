@@ -42,20 +42,16 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 field=$(echo "$spaced_filename" | sed -r -n 's/\ \([0-9]{4}\)\ .*$//p')
                 # Title with date
                 [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ [0-9]{4}\ .*$//p')
-                # Title with season and episode
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ s[0-9]{2}e[0-9]{2}\ .*$//Ip')
                 ;;
             "Series")
                 field=""
                 if [ "$display_series_for_1" = 1 ]; then
-                    episode=$(echo "$spaced_filename" | sed -r 's/^.*S[0-9]{2}E([0-9]{2}).*$/\1/I')
-                    season=$(echo "$spaced_filename" | sed -r 's/^.*(S[0-9]{2})E[0-9]{2}.*$/\1/I')
-                    if [ "$season" = 1 && "$episode" = 1 ]; then
-                        # Title with date in brackets
+                    episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
+                    season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
+                    if [[ "$season" = "01" && "$episode" = "01" ]]; then
+                        # Series name with date in brackets
                         field=$(echo "$spaced_filename" | sed -r -n 's/\ \([0-9]{4}\)\ .*$//p')
-                        # Title with date
-                        [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ [0-9]{4}\ .*$//p')
-                        # Title with season and episode
+                        # Series with season and episode
                         [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ s[0-9]{2}e[0-9]{2}\ .*$//Ip')
                     fi
                 else
@@ -70,14 +66,14 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
             "Season")
                 field=""
                 if [ "$display_season_for_1" = 1 ]; then
-                    episode=$(echo "$spaced_filename" | sed -r 's/^.*S[0-9]{2}E([0-9]{2}).*$/\1/I')
-                    [ "$episode" = 1 ] && field=$(echo "$spaced_filename" | sed -r 's/^.*(S[0-9]{2})E[0-9]{2}.*$/\1/I')
+                    episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
+                    [ "$episode" = "01" ] && field=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
                 else
-                    field=$(echo "$spaced_filename" | sed -r 's/^.*(S[0-9]{2})E[0-9]{2}.*$/\1/I')
+                    field=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
                 fi
                 ;;
             "Episode")
-                field=$(echo "$spaced_filename" | sed -r 's/^.*S[0-9]{2}E([0-9]{2}).*$/\1/I')
+                field=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
                 ;;
             "Year")
                 # Year with brackets
@@ -88,7 +84,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
             "Resolution")
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
                 if [[ -z "$field" && "$detect_resolution" == 1 && -f "$filepath" ]]; then
-                    local width=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$filepath" | jq '.streams[0] .width')
+                    width=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$filepath" | jq '.streams[0] .width')
                     if [ -z "$width" ]; then
                         field=""
                     else
