@@ -96,17 +96,17 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                     fi
                 fi
                 ;;
-            "Version")
+            "Edition")
                 # Strip the file extension
                 part_filename=$(echo "$spaced_filename" | sed -r 's/\ [0-9a-z]*$//I')
-                # Version after title and date in brackets
-                field=$(echo "$part_filename" | sed -n -r 's/^.*\ \([0-9]{4}\)\ -\ //p')
-                # Version after title and date in brackets and tmdbid
-                [ -z "$field" ] && field=$(echo "$part_filename" | sed -n -r 's/^.*\ \([0-9]{4}\)\ \[tmdbid-[0-9]*\]\ -\ //p')
-                # Version after title and date in brackets and imdbid
-                [ -z "$field" ] && field=$(echo "$part_filename" | sed -n -r 's/^.*\ \([0-9]{4}\)\ \[imdbid-[0-9]*\]\ -\ //p')
-                # Version without year or tmdbid/imdbid code (false positives here)
-                [ -z "$field" ] && field=$(echo "$part_filename" | sed -n -r 's/^.*\ -\ //p')
+                # Edition in curly brackets (Plex)
+                field=$(echo "$part_filename" | sed -n -r 's/.*\{edition-(.*)\}.*/\1/p')
+                # Edition after date in brackets and hyphen (jellyin & kodi)
+                [ -z "$field" ] && field=$(echo "$part_filename" | sed -n -r 's/.*\([0-9]{4}\)\ -\ (.*)/\1/p')
+                # Edition after date in brackets, tmdbid/imdbid in square nrackets and hyphen (jellyin)
+                [ -z "$field" ] && field=$(echo "$part_filename" | sed -n -r 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p')
+                # Fallback
+                [ -z "$field" ] && field=$(echo "$part_filename" |  sed -n -r "s/.*(remastered|theatrical\ cut|special\ edition|cinematic\ cut|extended\ cut|director'?+s\ cut|producer'?+s\ cut|unrated|uncut).*/\1/Ip")
                 ;;
             "Release Type")
                 part_filename=$(echo "$spaced_filename" grep -oP '\ \d{4}\ .*')
