@@ -68,7 +68,7 @@ By configuring the `tv_columns` and `movie_columns`, you can dictate which colum
 * `Season`: (Only for TV series) the TV series season.
 * `Episode`: (Only for TV series) the TV series season.
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
-* `Version`: (Jellyin specific) The relase version, ie. `Director's Cut`.
+* `Edition`: The release version, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
 * `Release Type`: (not in the default configuration) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
 * `Size (MB)`: (not in the default configuration) File size in MB
@@ -79,55 +79,14 @@ By configuring the `tv_columns` and `movie_columns`, you can dictate which colum
 
 # Directory and Filenames
 
-The script assumes the directory and filenaming structure for [Jellyfin][jellyfin].
+The script is designed for the directory and filenaming structure of [Jellyfin][jellyfin].
+
+It also supports the naming structure for [Plex][plex] and [Kodi[kodi]]
 
 All TV episodes should be in the format:
 
 * S01E01
 * s01e01
-
-This script is broadly compatible with [kodi][kodi] and [plex][plex]. However the main differences are be with:
-
-* different movie versions, where [jellyfin][jellyfin] uses the ` - ` to separate version text from filename text.
-* `tmdbid` and `imdbid` codes.
-
-## Movies
-
-```
-Movie.Name.Year..General.text.ext
-Movie Name (Year) General text.ext
-Movie Name (Year) [tmdbid-...] General text.ext
-├── Movie Name
-│   ├── Movie Name- [variant text].ext
-├── Movie Name (year)
-│   ├── Movie Name (year) - version 1 text.ext
-│   ├── Movie Name (year) - version 2 text.ext
-├── Movie Name (year) [tmdbid-...]
-│   ├── Movie Name (year) [tmdbid-...] - version 1 text.ext
-│   ├── Movie Name (year) [tmdbid-...] - version 2 text.ext
-├── Movie Name (year) [imdbid-...]
-│   ├── Movie Name (year) [imdbid-...] - version 1 text.ext
-│   ├── Movie Name (year) [imdbid-...] - version 2 text.ext
-```
-
-## TV Shows
-
-**Note:** In order to group the TV shows correctly, the filenames must all have exactly the same series name (including capitalisation).
-
-```
-├── TV Show
-│   ├── Season 1
-│   │  ├── TV Show S01E01 general text.ext
-│   │  ├── ...
-├── TV Show (year)
-│   ├── Season 1
-│   │  ├── TV Show (year) S01E01 general text.ext
-│   │  ├── ...
-├── TV Show (year) [tmdbid-...]
-│   ├── Season 1
-│   │  ├── TV Show (year) [tmdbid-...] S01E01 general text.ext
-│   │  ├── ...
-```
 
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/
