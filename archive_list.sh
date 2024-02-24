@@ -108,6 +108,70 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # Fallback
                 [ -z "$field" ] && field=$(echo "$part_filename" |  sed -n -r "s/.*(remastered|theatrical\ cut|special\ edition|cinematic\ cut|extended\ cut|director'?+s\ cut|producer'?+s\ cut|unrated|uncut).*/\1/Ip")
                 ;;
+            "Video")
+                # Strip the file extension
+                part_filename=$(echo "$spaced_filename" | sed -r 's/\ [0-9a-z]*$//I')
+                # H.261
+                [ $(echo "$part_filename" | grep -i "\ x261\ \|\ h-261\ \|\ h261\ \|\ h\ 261\ ") ] && field="H.261"
+                # MPEG-1
+                [ $(echo "$part_filename" | grep -i "\ mpeg1\ \|\ mpeg-1\ \|\ mpeg\ 1\ ") ] && field="MPEG-1"
+                # H.263
+                [ $(echo "$part_filename" | grep -i "\ x263\ \|\ h263\ \|\ h-263\ \|\ h\ 263\ ") ] && field="H.263"
+                # MPEG-2
+                [ $(echo "$part_filename" | grep -i "\ mpeg2\ \|\ mpeg-2\ \|\ mpeg\ 2\ \|\ h222\ \|\ h-222\ \|\ h\ 222\ \|\ h262\ \|\ h-262\ \|\ h\ 262\ ") ] && field="MPEG-2"
+                # MPEG-4
+                [ $(echo "$part_filename" | grep -i "\ mpeg-4\ part\ 2\ visual\ \|\ mpeg-4\ \|\ mpeg\ 4\ \|\ mpeg4\ ") ] && field="MPEG-4"
+                # VC-1
+                [ $(echo "$part_filename" | grep -i "\ vc1\ \|\ vc-1\ \|\ vc\ 1\ ") ] && field="VC-1"
+                # AVC
+                [ $(echo "$part_filename" | grep -i "\ avc\ \|\ x264\ \|\ h264\ \|\ h\ 264\ \|\ h-264\ \|\ mpeg-4\ part\ 10\ ") ] && field="AVC"
+                # AVS1
+                [ $(echo "$part_filename" | grep -i "\ avs1\ \|\ avs-1 \|\ avs\ 1\ ") ] && field="AVS1"
+                # VP8
+                [ $(echo "$part_filename" | grep -i "\ vp8\ \|\ vp-8\ \|\ vp\ 8\ ") ] && field="VP8"
+                # VC-2
+                [ $(echo "$part_filename" | grep -i "\ vc2\ \|\ vc-2\ \|\ vc\ 2\ ") ] && field="$field VC-2"
+                # HEVC
+                [ $(echo "$part_filename" | grep -i "\ hevc\ \|\ x265\ \|\ h265\ \|\ h-265\ \|\ h\ 265-\|\ mpeg-h\ part\ 2\ ") ] && field="HEVC"
+                # MJPEG
+                [ $(echo "$part_filename" | grep -i "\ motion\ jpeg\ \|\ mjpeg\ \|\ m-jpeg\ ") ] && field="MJPEG"
+                # VP9
+                [ $(echo "$part_filename" | grep -i "\ vp9\ \|\ vp-9\ \|\ vp\ 9\ ") ] && field="VP9"
+                # AVS2
+                [ $(echo "$part_filename" | grep -i "\ avs2 \|\ avs-2 \|\ avs\ 2\ ") ] && field="AVS2"
+                # AV1
+                [ $(echo "$part_filename" | grep -i "\ av1\ \|\ av-1\ \|\ av\ 1\ ") ] && field="AV1"
+                # AVS3
+                [ $(echo "$part_filename" | grep -i "\ avs3 \|\ avs-3 \|\ avs\ 3\ ") ] && field="AVS3"
+                # VVC
+                [ $(echo "$part_filename" | grep -i "\ vvc\ \|\ x266\ \|\ h266\ \|\ h-266\ \|\ h\ 266\ ") ] && field="$field VVC"
+                # MPEG-5
+                [ $(echo "$part_filename" | grep -i "\ lcevc \|\ mpeg5 \|\ mpeg-5\ \|\ mpeg\ 5\ ") ] && field="MPEG-5"
+                # 3D
+                [ $(echo "$part_filename" | grep -i "\ 3d\ ") ] && field="$field 3D"
+                # 10-bit
+                [ $(echo "$part_filename" | grep -i "\ 10bit\ \|\ 10-bit\ \|\ 10\ bit\ ") ] && field="$field 10-bit"
+                # DV
+                [ $(echo "$part_filename" | grep -i "\ dv\ ") ] && field="$field DV"
+                # HLG
+                [ $(echo "$part_filename" | grep -i "\ hlg\ ") ] && field="$field HLG"
+                # HDR
+                [ $(echo "$part_filename" | grep -i "\ hdr\ ") ] && field="$field HDR"
+                # HDR10
+                [ $(echo "$part_filename" | grep -i "\ hdr10\ ") ] && field="$field HDR10"
+                # HDR10+
+                [ $(echo "$part_filename" | grep -i "\ hdr10+\ ") ] && field="$field HDR10+"
+                field=$(echo "$field" | sed -r 's/^\ //')
+                if [[ -z "$field" && "$detect_video_codec"="1" ]]; then
+                    json=$(ffprobe -v error -show_streams -select_streams v:0 -of json -i "$filepath")
+                    field=$(echo "$json" | jq '.streams[0] .codec_name' | sed -r 's/\"//g'  | tr '[a-z]' '[A-Z]' | sed -r 's/MPEG2VIDEO/MPEG-2/' | sed -r 's/H264/AVC/')
+                    # @TODO ffprobe/mediainfo unable tp detect DV/HDR10(+) yet
+                    # color_space=$(echo "$json" | jq '.streams[0] .color_space' | sed -r 's/\"//g')
+                    # color_transfer=$(echo "$json" | jq '.streams[0] .color_transfer' | sed -r 's/\"//g')
+                    # color_primaries=$(echo "$json" | jq '.streams[0] .color_primaries' | sed -r 's/\"//g')
+                    # [[ "$color_space"="bt2020nc" && "$color_transfer"="smpte2084"  && "$color_primaries"="bt2020" ]] && field="$field HDR"
+                fi
+                ;;
             "Release Type")
                 part_filename=$(echo "$spaced_filename" grep -oP '\ \d{4}\ .*')
                 [ -z "$part_filename" ] && temp=$(echo "$spaced_filename" grep -oP '\ \-\ .*')
@@ -162,12 +226,12 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 ;;
         esac
         if [ ! -z "$line" ]; then
-            line=${line}",\""${field}"\""
+            line="$line,\"$field\""
         else
-            line="\""${field}"\""
+            line="\"$field\""
         fi
     done
-    output=${output}${line}";"
+    output="${output}${line};"
 done
 
 # Generate disk usage stats

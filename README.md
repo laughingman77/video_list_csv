@@ -69,6 +69,7 @@ By configuring the `tv_columns` and `movie_columns`, you can dictate which colum
 * `Episode`: (Only for TV series) the TV series season.
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
 * `Edition`: The release version, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
+* `Video`: The video codec, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
 * `Release Type`: (not in the default configuration) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
 * `Size (MB)`: (not in the default configuration) File size in MB
