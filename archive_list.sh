@@ -8,20 +8,6 @@ fi
 set -o allexport
 source .env
 
-joinByChar() {
-  local IFS="$1"
-  shift
-  echo "$*"
-}
-
-joinByString() {
-  local separator="$1"
-  shift
-  local first="$1"
-  shift
-  printf "%s" "$first" "${@/#/$separator}"
-}
-
 extensions=( m2ts webm mkv flv vob ogv ogg rrc gifv mng mov avi qt wmv yuv asf amv mp4 m4p m4v mpg mp2 mpeg mpe mpv m4v svi 3gp 3g2 mxf roq nsv flv f4v f4p f4a f4b mod )
 
 dir=$1
