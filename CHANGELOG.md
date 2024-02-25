@@ -7,3 +7,10 @@
 * Option to group TV files by series & season  
 * Added extra columns if wanted
 * Updated the README
+# 24 Feb 2024
+* Renamed Version column to Edition
+# 25 Feb 2024
+* Added Video column
+# 26 Feb 2024
+* Added Audio column
+* All columns active by default, except Release Type

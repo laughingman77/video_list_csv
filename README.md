@@ -1,10 +1,10 @@
 # video_list_csv
 
-Recursively create a CSV with details of all movie and TV media in a directory. Useful for cataloguing archive disks.
+Recursively create a CSV with details of all Movie and TV media in a directory. Useful for cataloguing archive disks.
 
 The script assumes separate archives for TV or Movie media, and automatically detects what kind of archive it is scanning and renders the appropriate columns.
 
-You can define what columns you want to render as well as customise the order in the `.env` file.
+You can define what columns you want to render as well as the column order in the settings file.
 
 The result CVS also contains summary data of `Disk Space used` and `Disk Space free`. This allows you to see free disk space after your media centre's metadata is taken into account.
 
@@ -17,8 +17,8 @@ This script is intended for people who want to maintain an archive of legitmatel
 ## Requirements
 
 * git
-* jq (if using the `detect_resolution` option)
-* ffmpeg (if using the `detect_resolution` option)
+* jq
+* ffmpeg
 
 ```bash
 sudo apt install git jq ffmpeg
@@ -53,6 +53,8 @@ cp example.env .env
 # .env options
 
 * `detect_resolution`: (0 or 1) If the video resolution is not in the filename, then automatically detect it.
+* `detect_video_codec`: (0 or 1) If the video formats are not detected in the filename, then automatically detect them.
+* `detect_audio_codec`: (0 or 1) If the audio formats are not detected in the filename, then automatically detect them.
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV ist more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV ist more readable.
 * `tv_columns`: TV list columns to render, and their order.
@@ -62,32 +64,37 @@ cp example.env .env
 
 By configuring the `tv_columns` and `movie_columns`, you can dictate which columns are rendered and in what order. The possible columns are:
 
-* `Series`: (Only for TV series) the TV series title.
 * `Title`: (Only for Movies) the Movie title.
-* `Year`: Relese date
+* `Edition`: (Only for Movies) the release edition, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
+* `Series`: (Only for TV series) the TV series title.
 * `Season`: (Only for TV series) the TV series season.
 * `Episode`: (Only for TV series) the TV series season.
+* `Year`: Relese date
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
-* `Edition`: The release version, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
 * `Video`: The video codec, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
+* `Audio`
 * `Release Type`: (not in the default configuration) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
-* `Size (MB)`: (not in the default configuration) File size in MB
-* `Size (KB)`: (not in the default configuration) File size in KB
-* `Size (B)`: (not in the default configuration) File size in B
+* `Size (MB)`: File size in MB
+* `Size (KB)`: File size in KB
+* `Size (B)`: File size in B
 * `Filename`: Filename
-* `Full Path`: (not in the default configuration) Absolute filepath and filename
+* `Full Path`: Absolute filepath and filename
 
 # Directory and Filenames
 
 The script is designed for the directory and filenaming structure of [Jellyfin][jellyfin].
 
-It also supports the naming structure for [Plex][plex] and [Kodi[kodi]]
+It also supports the naming structure for [Plex][plex] and [Kodi][kodi].
+
+The script assumes a separator of " " or "." between items in the filename, and will do its best to detect items.
 
 All TV episodes should be in the format:
 
 * S01E01
 * s01e01
+
+
 
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/

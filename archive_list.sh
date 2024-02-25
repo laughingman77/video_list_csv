@@ -9,7 +9,6 @@ set -o allexport
 source .env
 
 extensions=( m2ts webm mkv flv vob ogv ogg rrc gifv mng mov avi qt wmv yuv asf amv mp4 m4p m4v mpg mp2 mpeg mpe mpv m4v svi 3gp 3g2 mxf roq nsv flv f4v f4p f4a f4b mod )
-
 dir=$1
 
 # Create a regex of the extensions for the find command
@@ -83,7 +82,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 ;;
             "Resolution")
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
-                if [[ -z "$field" && "$detect_resolution" == 1 && -f "$filepath" ]]; then
+                if [[ $detect_resolution -eq 1 && -z $field && -f $filepath ]]; then
                     width=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$filepath" | jq '.streams[0] .width')
                     if [ -z "$width" ]; then
                         field=""
@@ -114,13 +113,13 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # H.261
                 [ $(echo "$part_filename" | grep -i "\ x261\ \|\ h-261\ \|\ h261\ \|\ h\ 261\ ") ] && field="H.261"
                 # MPEG-1
-                [ $(echo "$part_filename" | grep -i "\ mpeg1\ \|\ mpeg-1\ \|\ mpeg\ 1\ ") ] && field="MPEG-1"
+                [ $(echo "$part_filename" | grep -i "\ mpeg1\ \|\ mpeg-1\ \|\ mpeg\ 1\ ") ] && field="MPEG1"
                 # H.263
                 [ $(echo "$part_filename" | grep -i "\ x263\ \|\ h263\ \|\ h-263\ \|\ h\ 263\ ") ] && field="H.263"
                 # MPEG-2
-                [ $(echo "$part_filename" | grep -i "\ mpeg2\ \|\ mpeg-2\ \|\ mpeg\ 2\ \|\ h222\ \|\ h-222\ \|\ h\ 222\ \|\ h262\ \|\ h-262\ \|\ h\ 262\ ") ] && field="MPEG-2"
+                [ $(echo "$part_filename" | grep -i "\ mpeg2\ \|\ mpeg-2\ \|\ mpeg\ 2\ \|\ h222\ \|\ h-222\ \|\ h\ 222\ \|\ h262\ \|\ h-262\ \|\ h\ 262\ ") ] && field="MPEG2"
                 # MPEG-4
-                [ $(echo "$part_filename" | grep -i "\ mpeg-4\ part\ 2\ visual\ \|\ mpeg-4\ \|\ mpeg\ 4\ \|\ mpeg4\ ") ] && field="MPEG-4"
+                [ $(echo "$part_filename" | grep -i "\ mpeg-4\ part\ 2\ visual\ \|\ mpeg-4\ \|\ mpeg\ 4\ \|\ mpeg4\ ") ] && field="MPEG4"
                 # VC-1
                 [ $(echo "$part_filename" | grep -i "\ vc1\ \|\ vc-1\ \|\ vc\ 1\ ") ] && field="VC-1"
                 # AVC
@@ -146,7 +145,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # VVC
                 [ $(echo "$part_filename" | grep -i "\ vvc\ \|\ x266\ \|\ h266\ \|\ h-266\ \|\ h\ 266\ ") ] && field="$field VVC"
                 # MPEG-5
-                [ $(echo "$part_filename" | grep -i "\ lcevc \|\ mpeg5 \|\ mpeg-5\ \|\ mpeg\ 5\ ") ] && field="MPEG-5"
+                [ $(echo "$part_filename" | grep -i "\ lcevc \|\ mpeg5 \|\ mpeg-5\ \|\ mpeg\ 5\ ") ] && field="MPEG5"
                 # 3D
                 [ $(echo "$part_filename" | grep -i "\ 3d\ ") ] && field="$field 3D"
                 # 10-bit
@@ -162,15 +161,75 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # HDR10+
                 [ $(echo "$part_filename" | grep -i "\ hdr10+\ ") ] && field="$field HDR10+"
                 field=$(echo "$field" | sed -r 's/^\ //')
-                if [[ -z "$field" && "$detect_video_codec"="1" ]]; then
+                if [[ $detect_video_codec -eq 1 && -z $field ]]; then
                     json=$(ffprobe -v error -show_streams -select_streams v:0 -of json -i "$filepath")
-                    field=$(echo "$json" | jq '.streams[0] .codec_name' | sed -r 's/\"//g'  | tr '[a-z]' '[A-Z]' | sed -r 's/MPEG2VIDEO/MPEG-2/' | sed -r 's/H264/AVC/')
+                    field=$(echo "$json" | jq '.streams[0] .codec_name' | sed -r 's/\"//g'  | tr '[a-z]' '[A-Z]')
+                    # Resolve name
+                    field=$(echo "$field" | sed -r 's/MPEG2VIDEO/MPEG2/' | sed -r 's/H264/AVC/')
+
                     # @TODO ffprobe/mediainfo unable tp detect DV/HDR10(+) yet
                     # color_space=$(echo "$json" | jq '.streams[0] .color_space' | sed -r 's/\"//g')
                     # color_transfer=$(echo "$json" | jq '.streams[0] .color_transfer' | sed -r 's/\"//g')
                     # color_primaries=$(echo "$json" | jq '.streams[0] .color_primaries' | sed -r 's/\"//g')
                     # [[ "$color_space"="bt2020nc" && "$color_transfer"="smpte2084"  && "$color_primaries"="bt2020" ]] && field="$field HDR"
                 fi
+                ;;
+            "Audio")
+                # Strip the file extension
+                part_filename=$(echo "$spaced_filename" | sed -r 's/\ [0-9a-z]*$//I')
+                codec=""
+                channel_layout=""
+                # DTS
+                [ $(echo "$part_filename" | grep -i "\ dts\ ") ] && codec="DTS"
+                # DTS:X
+                [ $(echo "$part_filename" | grep -i "\ dts\:x\ \|\ dts-x\ ") ] && codec="DTS:X"
+                # DTS-MA
+                [ $(echo "$part_filename" | grep -i "\ dts-ma\ \|\ dts\ ma\ ") ] && codec="DTS-MA"
+                # DTS-HD
+                [ $(echo "$part_filename" | grep -i "\ dts-hd\ \|\ dts\ hd\ ") ] && codec="DTS-HD"
+                # DTS HD-MA
+                [ $(echo "$part_filename" | grep -i "\ dts-hd-ma\ \|\ dts-hd\ ma\ \|\ dts-hdma\ \|\ dts\ hd-ma\ \|\ dts\ hd\ ma\ \|\ dts-hd\ master\ audio\ \|\ dts++\ \|\ dca\ xll") ] && codec="DTS-HD MA"
+                # TrueHD
+                [ $(echo "$part_filename" | grep -i "\ truehd\ ") ] && codec="TrueHD"
+                # Atmos
+                [ $(echo "$part_filename" | grep -i "\ atmos\ ") ] && codec="Atmos"
+                # FLAC
+                [ $(echo "$part_filename" | grep -i "\ flac\ ") ] && codec="FLAC"
+                # PCM
+                [ $(echo "$part_filename" | grep -i "\ pcm\ \|\ lpcm\ ") ] && codec="PCM"
+                # MLP
+                [ $(echo "$part_filename" | grep -i "\ mlp\ \|\ ppcm\ ") ] && codec="MLP"
+                # MPEG-4 ALS
+                [ $(echo "$part_filename" | grep -i "\ mpeg-4\ als\ ") ] && codec="MPEG-4 ALS"
+                # MPEG-4 SLS
+                [ $(echo "$part_filename" | grep -i "\ mpeg-4\ sls\ ") ] && codec="MPEG-4 SLS"
+                # RealAudio
+                [ $(echo "$part_filename" | grep -i "\ realaudio\ ") ] && codec="RealAudio"
+                # Dolby Digital
+                [ $(echo "$part_filename" | grep -i "\ ac3\ \|\ atsc\ a/52\ ") ] && codec="DD"
+                # Dolby Digital Plus
+                [ $(echo "$part_filename" | grep -i "\ e-ac-3\ ") ] && codec="DD+"
+                # Dolby AC-4
+                [ $(echo "$part_filename" | grep -i "\ ac-4\ ") ] && codec="Dolby AC4"
+                # MPEG Layer 1
+                [ $(echo "$part_filename" | grep -i "\ mp-1\ ") ] && codec="MP1"
+                # MPEG Layer 2
+                [ $(echo "$part_filename" | grep -i "\ mp-2\ ") ] && codec="MP2"
+                # MPEG Layer 3
+                [ $(echo "$part_filename" | grep -i "\ mp-3\ ") ] && codec="MP3"
+                # AAC
+                [ $(echo "$part_filename" | grep -i "\ aac\ ") ] && field="AAC"
+                # AAC
+                [ $(echo "$part_filename" | grep -i "\ aac\ ") ] && codec="AAC"
+                # APE
+                [ $(echo "$part_filename" | grep -i "\ ape\ ") ] && codec="APE"
+                channel_layout=$(echo "$part_filename" | sed -n -r 's/.*\ ([0-9]\ [0-9]).*/\1/p' | tr " " ".")
+                if [[ $detect_audio_codec -eq 1 && ( -z $codec || -z $channel_layout ) ]]; then
+                    json=$(ffprobe -v error -show_streams -select_streams a:0 -of json -i "$filepath")
+                    [ -z "$channel_layout" ] && channel_layout=$(echo "$json" | jq '.streams[0] .channel_layout' | sed -r 's/\"//g' | sed -r 's/\(side\)//g')
+                    [ -z "$codec" ] && codec=$(echo "$json" | jq '.streams[0] .codec_name' | sed -r 's/\"//g'  | tr '[a-z]' '[A-Z]')
+                fi
+                field="$codec $channel_layout"
                 ;;
             "Release Type")
                 part_filename=$(echo "$spaced_filename" grep -oP '\ \d{4}\ .*')
