@@ -11,8 +11,6 @@ source .env
 extensions=( m2ts webm mkv flv vob ogv ogg rrc gifv mng mov avi qt wmv yuv asf amv mp4 m4p m4v mpg mp2 mpeg mpe mpv m4v svi 3gp 3g2 mxf roq nsv flv f4v f4p f4a f4b mod )
 dir=$1
 
-echo "detect_audio_codec: $detect_audio_codec"
-
 # Create a regex of the extensions for the find command
 extensions_re="\\("${extensions[0]}
 for t in "${extensions[@]:1:${#extensions[*]}}"; do
