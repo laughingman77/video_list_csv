@@ -52,9 +52,7 @@ cp example.env .env
 
 # .env options
 
-* `detect_resolution`: (0 or 1) If the video resolution is not in the filename, then automatically detect it.
-* `detect_video_codec`: (0 or 1) If the video formats are not detected in the filename, then automatically detect them.
-* `detect_audio_codec`: (0 or 1) If the audio formats are not detected in the filename, then automatically detect them.
+* `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV ist more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV ist more readable.
 * `tv_columns`: TV list columns to render, and their order.
