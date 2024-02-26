@@ -82,7 +82,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 ;;
             "Resolution")
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
-                if [[ $detect_resolution -eq 1 && -z $field && -f $filepath ]]; then
+                if [[ $detect_if_not_in_filename -eq 1 && -z $field && -f $filepath ]]; then
                     width=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$filepath" | jq '.streams[0] .width')
                     if [ -z "$width" ]; then
                         field=""
@@ -161,7 +161,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # HDR10+
                 [ $(echo "$part_filename" | grep -i "\ hdr10+\ ") ] && field="$field HDR10+"
                 field=$(echo "$field" | sed -r 's/^\ //')
-                if [[ $detect_video_codec -eq 1 && -z $field ]]; then
+                if [[ $detect_if_not_in_filename -eq 1 && -z $field ]]; then
                     json=$(ffprobe -v error -show_streams -select_streams v:0 -of json -i "$filepath")
                     field=$(echo "$json" | jq '.streams[0] .codec_name' | sed -r 's/\"//g'  | tr '[a-z]' '[A-Z]')
                     # Resolve name
@@ -224,7 +224,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # APE
                 [ $(echo "$part_filename" | grep -i "\ ape\ ") ] && codec="APE"
                 channel_layout=$(echo "$part_filename" | sed -n -r 's/.*\ ([0-9]\ [0-9]).*/\1/p' | tr " " ".")
-                if [[ $detect_audio_codec -eq 1 && ( -z $codec || -z $channel_layout ) ]]; then
+                if [[ $detect_if_not_in_filename -eq 1 && ( -z $codec || -z $channel_layout ) ]]; then
                     json=$(ffprobe -v error -show_streams -select_streams a:0 -of json -i "$filepath")
                     [ -z "$channel_layout" ] && channel_layout=$(echo "$json" | jq '.streams[0] .channel_layout' | sed -r 's/\"//g' | sed -r 's/\(side\)//g')
                     [ -z "$codec" ] && codec=$(echo "$json" | jq '.streams[0] .codec_name' | sed -r 's/\"//g'  | tr '[a-z]' '[A-Z]')
