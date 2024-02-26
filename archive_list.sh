@@ -225,7 +225,9 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 [ $(echo "$part_filename" | grep -i "\ ape\ ") ] && codec="APE"
                 if [[ $detect_if_not_in_filename -eq 1 && ( -z $codec || -z $channel_layout ) ]]; then
                     json=$(ffprobe -v error -show_streams -select_streams a:0 -of json -i "$filepath")
-                    [ -z "$channel_layout" ] && channel_layout=$(echo "$json" | jq '.streams[0] .channel_layout' | sed -r 's/\"//g' | sed -r 's/\(side\)//g')
+                    [ -z "$channel_layout" ] && channel_layout=$(echo "$json" | jq '.streams[0] .channel_layout')
+                    # Resolve and tidy channel layout
+                    channel_layout=$(echo "$channel_layout" | sed -r 's/\"//g' | sed -r 's/\(side\)//g' | sed -r 's/mono/1.0/g' | sed -r 's/stereo/2.0/g')
                     [ -z "$codec" ] && codec=$(echo "$json" | jq '.streams[0] .codec_name' | sed -r 's/\"//g'  | tr '[a-z]' '[A-Z]')
                 fi
                 field="$codec $channel_layout"
