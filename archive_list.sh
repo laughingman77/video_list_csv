@@ -50,15 +50,17 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                     if [[ "$season" = "01" && "$episode" = "01" ]]; then
                         # Series name with date in brackets
                         field=$(echo "$spaced_filename" | sed -r -n 's/\ \([0-9]{4}\)\ .*$//p')
-                        # Series with season and episode
+                        # Series name with date
+                        [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ [0-9]{4}\ .*$//p')
+                        # Series name with season and episode
                         [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ s[0-9]{2}e[0-9]{2}\ .*$//Ip')
                     fi
                 else
-                    # Title with date in brackets
+                    # Series name with date in brackets
                     field=$(echo "$spaced_filename" | sed -r -n 's/\ \([0-9]{4}\)\ .*$//p')
-                    # Title with date
+                    # Series name with date
                     [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ [0-9]{4}\ .*$//p')
-                    # Title with season and episode
+                    # Series name with season and episode
                     [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -n -r 's/\ s[0-9]{2}e[0-9]{2}\ .*$//Ip')
                 fi
                 ;;
@@ -84,9 +86,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
                 if [[ $detect_if_not_in_filename -eq 1 && -z $field && -f $filepath ]]; then
                     width=$(ffprobe -v error -select_streams v -show_entries stream=width,height -of json "$filepath" | jq '.streams[0] .width')
-                    if [ -z "$width" ]; then
-                        field=""
-                    else
+                    if [ ! -z "$width" ]; then
                         [ "$width" -le 7680 ] && field="4320p"
                         [ "$width" -le 3840 ] && field="2160p"
                         [ "$width" -le 1920 ] && field="1080p"
@@ -129,7 +129,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # VP8
                 [ $(echo "$part_filename" | grep -i "\ vp8\ \|\ vp-8\ \|\ vp\ 8\ ") ] && field="VP8"
                 # VC-2
-                [ $(echo "$part_filename" | grep -i "\ vc2\ \|\ vc-2\ \|\ vc\ 2\ ") ] && field="$field VC-2"
+                [ $(echo "$part_filename" | grep -i "\ vc2\ \|\ vc-2\ \|\ vc\ 2\ ") ] && field="VC-2"
                 # HEVC
                 [ $(echo "$part_filename" | grep -i "\ hevc\ \|\ x265\ \|\ h265\ \|\ h-265\ \|\ h\ 265-\|\ mpeg-h\ part\ 2\ ") ] && field="HEVC"
                 # MJPEG
@@ -143,7 +143,7 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 # AVS3
                 [ $(echo "$part_filename" | grep -i "\ avs3 \|\ avs-3 \|\ avs\ 3\ ") ] && field="AVS3"
                 # VVC
-                [ $(echo "$part_filename" | grep -i "\ vvc\ \|\ x266\ \|\ h266\ \|\ h-266\ \|\ h\ 266\ ") ] && field="$field VVC"
+                [ $(echo "$part_filename" | grep -i "\ vvc\ \|\ x266\ \|\ h266\ \|\ h-266\ \|\ h\ 266\ ") ] && field="VVC"
                 # MPEG-5
                 [ $(echo "$part_filename" | grep -i "\ lcevc \|\ mpeg5 \|\ mpeg-5\ \|\ mpeg\ 5\ ") ] && field="MPEG5"
                 # 3D
@@ -177,8 +177,8 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
             "Audio")
                 # Strip the file extension
                 part_filename=$(echo "$spaced_filename" | sed -r 's/\ [0-9a-z]*$//I')
+                channel_layout=$(echo "$part_filename" | sed -n -r 's/.*\ ([0-9]\ [0-9]).*/\1/p' | tr " " ".")
                 codec=""
-                channel_layout=""
                 # DTS
                 [ $(echo "$part_filename" | grep -i "\ dts\ ") ] && codec="DTS"
                 # DTS:X
@@ -223,7 +223,6 @@ for filepath in $(find ${dir} -type f -regex ".*\.${extensions_re}"); do
                 [ $(echo "$part_filename" | grep -i "\ aac\ ") ] && codec="AAC"
                 # APE
                 [ $(echo "$part_filename" | grep -i "\ ape\ ") ] && codec="APE"
-                channel_layout=$(echo "$part_filename" | sed -n -r 's/.*\ ([0-9]\ [0-9]).*/\1/p' | tr " " ".")
                 if [[ $detect_if_not_in_filename -eq 1 && ( -z $codec || -z $channel_layout ) ]]; then
                     json=$(ffprobe -v error -show_streams -select_streams a:0 -of json -i "$filepath")
                     [ -z "$channel_layout" ] && channel_layout=$(echo "$json" | jq '.streams[0] .channel_layout' | sed -r 's/\"//g' | sed -r 's/\(side\)//g')
