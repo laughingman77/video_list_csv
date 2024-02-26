@@ -2,11 +2,11 @@
 
 Recursively create a CSV with details of all Movie and TV media in a directory. Useful for cataloguing archive disks.
 
-The script assumes separate archives for TV or Movie media, and automatically detects what kind of archive it is scanning and renders the appropriate columns.
+The script assumes these are separate archives for TV or Movie media, and automatically detects what kind of archive it is scanning and renders the appropriate archive list.
 
-You can define what columns you want to render as well as the column order in the settings file.
+You can define what columns you want to render and column order in the settings file.
 
-The result CVS also contains summary data of `Disk Space used` and `Disk Space free`. This allows you to see free disk space after your media centre's metadata is taken into account.
+The result CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after your media centre's metadata is taken into account.
 
 ## Disclaimer
 
@@ -32,7 +32,7 @@ git clone git@github.com:laughingman77/video_list_csv.git
     
 # Configure
 
-The `.env` contains the configuration for various options in the script. The `example.env` contains all of the default settings. Copy `example.env` to `.env` and, if needed, configure `.env` to your requirements.
+The `.env` file contains the configuration for various options in the script. The `example.env` contains all of the default settings. Copy `example.env` to `.env` and, if needed, configure `.env` to your requirements.
 
 ```bash
 cp example.env .env
@@ -69,8 +69,8 @@ By configuring the `tv_columns` and `movie_columns`, you can dictate which colum
 * `Episode`: (Only for TV series) the TV series season.
 * `Year`: Relese date
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
-* `Video`: The video codec, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
-* `Audio`
+* `Video`: The video codec and colouration, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
+* `Audio`: the ausio codec and channel layout
 * `Release Type`: (not in the default configuration) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
 * `Size (MB)`: File size in MB
@@ -81,18 +81,14 @@ By configuring the `tv_columns` and `movie_columns`, you can dictate which colum
 
 # Directory and Filenames
 
-The script is designed for the directory and filenaming structure of [Jellyfin][jellyfin].
+The script is designed for the directory and filenaming structure of [Jellyfin][jellyfin]. [Plex][plex] and [Kodi][kodi].
 
-It also supports the naming structure for [Plex][plex] and [Kodi][kodi].
+The script assumes a separator of `space` or `period` between words in the filename, and will do its best to detect items. Usage of `hyphen` could not be added to the detection, due to too many false positives.
 
-The script assumes a separator of " " or "." between items in the filename, and will do its best to detect items.
-
-All TV episodes should be in the format:
+All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}`, exalples:
 
 * S01E01
 * s01e01
-
-
 
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/
