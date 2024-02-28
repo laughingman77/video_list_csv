@@ -1,12 +1,14 @@
 # video_list_csv
 
-Recursively create a CSV with details of all Movie and TV media in a directory. Useful for cataloguing archive disks.
+This script recursively scans a directory and creates a CSV with details of all Movie and TV media in that directory and/or sub-directories. It is useful for cataloguing media archive disks.
+
+This is a POSIX compliant bash script, so it will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]).
 
 The script assumes these are separate archives for TV or Movie media, and automatically detects what kind of archive it is scanning and renders the appropriate archive list.
 
 You can define what columns you want to render and column order in the settings file.
 
-The result CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after your media centre's metadata is taken into account.
+The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after other files in the archive are taken into account.
 
 ## Disclaimer
 
@@ -40,15 +42,19 @@ cp example.env .env
 
 # Usage
 
-1. Make a copy of the spreadsheet
-1. Duplicate the `Archive Template` sheet for your archive disk
+1. Make a copy of the spreadsheet.
+1. Duplicate the `Archive Template` sheet for your archive disk, and give it a meaningful label.
 1. Run the script:
+    ```bash
+    sh archive_list.sh directory > ./archive.csv
+    ```
+    or
     ```bash
     ./archive_list.sh directory > ./archive.csv
     ```
 1. Import the result CSV into a spreadseet.
-1. Copy the cells from the imported CSV data into your new sheet at cell `A4`.
-1. Sort the individual archive file lines as you wish, for readability.
+1. Copy the cells from the imported CSV data and paste it into your duplicates sheet at cell `A4`.
+1. Sort the individual archive file rows as you wish, for readability.
 
 # .env options
 
@@ -60,7 +66,11 @@ cp example.env .env
 
 ## Columns config
 
-By configuring the `tv_columns` and `movie_columns`, you can dictate which columns are rendered and in what order. The possible columns are:
+By configuring the `tv_columns` and `movie_columns`, you can dictate which columns are rendered and in what order.
+
+The column names are separated by the `:` character.
+
+The possible columns are:
 
 * `Title`: (Only for Movies) the Movie title.
 * `Edition`: (Only for Movies) the release edition, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
@@ -81,11 +91,11 @@ By configuring the `tv_columns` and `movie_columns`, you can dictate which colum
 
 # Directory and Filenames
 
-The script is designed for the directory and filenaming structure of [Jellyfin][jellyfin]. [Plex][plex] and [Kodi][kodi].
+The script is designed for the directory and filenaming structure of [Jellyfin][jellyfin], [Plex][plex] and [Kodi][kodi].
 
 The script assumes a separator of `space` or `period` between words in the filename, and will do its best to detect items. Usage of `hyphen` could not be added to the detection, due to too many false positives.
 
-All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}`, exalples:
+All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}` (case-insensitive), examples:
 
 * S01E01
 * s01e01
@@ -94,3 +104,4 @@ All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}`, exalples:
 [plex]: https://www.plex.tv/
 [kodi]: https://kodi.tv/
 [release_types]: https://en.wikipedia.org/wiki/Pirated_movie_release_types
+[wsl]: https://www.thewindowsclub.com/how-to-run-sh-or-shell-script-file-in-windows-10
