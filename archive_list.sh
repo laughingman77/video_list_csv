@@ -36,6 +36,11 @@ while IFS= read -r filepath; do
         season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
         series=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ s\d{2}e\d{2}\ )')
     fi
+    size=0
+    if ( echo "$columns" | grep -Piq 's\Size \(GB\)|Size \(MB\)|Size \(KB\)|Size \(B\)' ); then
+        # Generate output from path and size using: $(stat -c '%s' filepath)
+        size=$(stat -c '%s' "$filepath")
+    fi
     # @see https://gist.github.com/biiont/290341b29657c0bb2df6
     col_arr="$columns|"
     # For each column
@@ -152,7 +157,6 @@ while IFS= read -r filepath; do
                 if [ "$detect_if_not_in_filename" -eq 1 ] && [ -z "$field" ]; then
                     [ -z "$json" ] && json=$(ffprobe -v error -show_streams -of json -i "$filepath")
                     field=$(echo "$json" | jq '.streams[] | select(.codec_type == "video") .codec_name' | sed -r 's/\"//g'  | tr '[:lower:]' '[:upper:]' | sed -r 's/MPEG2VIDEO/MPEG2/' | sed -r 's/H264/AVC/')
-
                     # @TODO ffprobe/mediainfo unable tp detect DV/HDR10(+) yet
                     # color_space=$(echo "$json" | jq '.streams[0] .color_space' | sed -r 's/\"//g')
                     # color_transfer=$(echo "$json" | jq '.streams[0] .color_transfer' | sed -r 's/\"//g')
@@ -246,20 +250,16 @@ while IFS= read -r filepath; do
                 ( echo "$part_filename" | grep -iq 'remux' ) && field='Remux'
                 ;;
             'Size (GB)')
-                size_b=$(stat -c '%s' "$filepath")
-                field=$(echo "scale=2; $size_b / 1024 / 1024 / 1024" | bc -l)
+                field=$( echo "scale=2; $size / 1073741824" | bc )
                 ;;
             'Size (MB)')
-                size_b=$(stat -c '%s' "$filepath")
-                field=$(echo "scale=2; $size_b / 1024 / 1024" | bc -l)
+                field=$( echo "scale=2; $size / 1048576" | bc )
                 ;;
             'Size (KB)')
-                size_b=$(stat -c '%s' "$filepath")
-                field=$(echo "scale=2; $size_b / 1024" | bc -l)
+                field=$( echo "scale=2; $size / 1024" | bc )
                 ;;
             'Size (B)')
-                # Generate output from path and size using: $(stat -c '%s' filepath)
-                field=$(stat -c '%s' "$filepath")
+                field="$size"
                 ;;
             'Filename')
                 field="$filename"
