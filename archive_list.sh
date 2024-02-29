@@ -11,11 +11,11 @@ set -a
 . './.env'
 set +a
 
-extensions='m2ts:webm:mkv:flv:vob:ogv:ogg:rrc:gifv:mng:mov:avi:qt:wmv:yuv:asf:amv:mp4:m4p:m4v:mpg:mp2:mpeg:mpe:mpv:m4v:svi:3gp:3g2:mxf:roq:nsv:flv:f4v:f4p:f4a:f4b:mod'
+extensions='m2ts|webm|mkv|flv|vob|ogv|ogg|rrc|gifv|mng|mov|avi|qt|wmv|yuv|asf|amv|mp4|m4p|m4v|mpg|mp2|mpeg|mpe|mpv|m4v|svi|3gp|3g2|mxf|roq|nsv|flv|f4v|f4p|f4a|f4b|mod'
 dir=$1
 
 # Create a regex of the extensions for the find command
-extensions_re="\\($(echo "$extensions" | sed -r 's/\:/\\\|/g')\\)"
+extensions_re="\\($(echo "$extensions" | sed -r 's/\|/\\\|/g')\\)"
 
 columns=''
 filenames="$(mktemp)"
@@ -37,10 +37,10 @@ while IFS= read -r filepath; do
         series=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ s\d{2}e\d{2}\ )')
     fi
     # @see https://gist.github.com/biiont/290341b29657c0bb2df6
-    col_arr="$columns:"
+    col_arr="$columns|"
     # For each column
     while [ -n "$col_arr" ]; do 
-        column=${col_arr%%:*}
+        column=${col_arr%%|*}
         field=''
         case "$column" in
             'Title')
@@ -268,7 +268,7 @@ while IFS= read -r filepath; do
                 field="$filepath"
                 ;;
         esac
-        col_arr=${col_arr#*:}
+        col_arr=${col_arr#*|}
         if test -z "$line"; then
             line="\"$field\""
         else
@@ -282,15 +282,15 @@ rm "$filenames"
 
 # Add column headings
 line=''
-col_arr="$columns:"
+col_arr="$columns|"
 while [ -n "$col_arr" ]; do 
-    column=${col_arr%%:*}
+    column=${col_arr%%|*}
     if test -z "$line"; then
         line="\"$column\""
     else
         line="$line,\"$column\""
     fi
-    col_arr=${col_arr#*:}
+    col_arr=${col_arr#*|}
 done
 unset column col_arr
 output="$line;$output"

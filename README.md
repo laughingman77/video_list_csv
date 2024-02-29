@@ -1,12 +1,14 @@
 # video_list_csv
 
-This script recursively scans a directory and creates a CSV with details of all Movie and TV media in that directory and/or sub-directories. It is useful for cataloguing media archive disks.
+## Overview
 
-This is a POSIX compliant bash script, so it will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]).
+This script recursively scans a directory and creates a CSV with details of all Movie and TV media in that directory and sub-directories. This is aimed towards Home Theatre enthusiasts and their archives. However it can be used for any directories containing video media.
+
+This is a POSIX compliant bash script. It will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]).
 
 The script assumes these are separate archives for TV or Movie media, and automatically detects what kind of archive it is scanning and renders the appropriate archive list.
 
-You can define what columns you want to render and column order in the settings file.
+You can define what columns you want to render and the order in the settings file.
 
 The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after other files in the archive are taken into account.
 
@@ -14,7 +16,7 @@ The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` a
 
 This script is intended for people who want to maintain an archive of legitmately backed up or original videos. However, it does contain possible configuration to list `Release type` of a video, this is specific to pirated media (see [Pirated movie release types][release_types]). **We do not condone Piracy in any way, it is against the law**, and this feature has only been added for completeness and nerdiness.
 
-# Install
+# Installation
 
 ## Requirements
 
@@ -32,7 +34,7 @@ sudo apt install git jq ffmpeg
 git clone git@github.com:laughingman77/video_list_csv.git
 ```
     
-# Configure
+# Configuration
 
 The `.env` file contains the configuration for various options in the script. The `example.env` contains all of the default settings. Copy `example.env` to `.env` and, if needed, configure `.env` to your requirements.
 
@@ -42,33 +44,33 @@ cp example.env .env
 
 # Usage
 
-1. Make a copy of the spreadsheet.
-1. Duplicate the `Archive Template` sheet for your archive disk, and give it a meaningful label.
+1. Copy the `Movie Archive` spreadsheet into your home directory.
+1. In your new spreadsheet, duplicate the `Archive Template` sheet for your archive disk, and give it a meaningful name.
 1. Run the script:
     ```bash
-    sh archive_list.sh directory > ./archive.csv
+    sh archive_list.sh /path/to/archive/dir/ > ./archive.csv
     ```
     or
     ```bash
-    ./archive_list.sh directory > ./archive.csv
+    ./archive_list.sh /path/to/archive/dir/ > ./archive.csv
     ```
-1. Import the result CSV into a spreadseet.
-1. Copy the cells from the imported CSV data and paste it into your duplicates sheet at cell `A4`.
+1. Import `archive.csv` into your spreadseet program.
+1. Copy the cells from the imported CSV data and paste it into your archive sheet at cell `A4`.
 1. Sort the individual archive file rows as you wish, for readability.
 
 # .env options
 
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
-* `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV ist more readable.
-* `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV ist more readable.
-* `tv_columns`: TV list columns to render, and their order.
-* `movie_columns`: Movie list columns to render, and their order.
+* `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
+* `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.
+* `tv_columns`: TV archive columns to render, and their order.
+* `movie_columns`: Movie archive columns to render, and their order.
 
 ## Columns config
 
 By configuring the `tv_columns` and `movie_columns`, you can dictate which columns are rendered and in what order.
 
-The column names are separated by the `:` character.
+The column names are separated by the `|` character.
 
 The possible columns are:
 
@@ -76,7 +78,7 @@ The possible columns are:
 * `Edition`: (Only for Movies) the release edition, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
 * `Series`: (Only for TV series) the TV series title.
 * `Season`: (Only for TV series) the TV series season.
-* `Episode`: (Only for TV series) the TV series season.
+* `Episode`: (Only for TV series) the TV series episode.
 * `Year`: Relese date
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
 * `Video`: The video codec and colouration, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
@@ -87,7 +89,7 @@ The possible columns are:
 * `Size (KB)`: File size in KB
 * `Size (B)`: File size in B
 * `Filename`: Filename
-* `Full Path`: Absolute filepath and filename
+* `Full Path`: Absolute filepath and filename (this includes the mount path if the archive disk is an external disk)
 
 # Directory and Filenames
 
