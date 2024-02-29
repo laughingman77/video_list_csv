@@ -31,13 +31,13 @@ while IFS= read -r filepath; do
     if [ -z "$columns" ]; then
         echo "$spaced_filename" | grep -Piq '\ s\d{2}e\d{2}\ ' && columns="$tv_columns" || columns="$movie_columns"
     fi
-    if ( echo "$columns" | grep -Piq 's\series|season|episode' ); then
+    if ( echo "$columns" | grep -iq 'series\|season\|episode' ); then
         episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
         season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
         series=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ s\d{2}e\d{2}\ )')
     fi
     size=0
-    if ( echo "$columns" | grep -Piq 's\Size \(GB\)|Size \(MB\)|Size \(KB\)|Size \(B\)' ); then
+    if ( echo "$columns" | grep -iq 'size (gb)\|size (mb)\|size (kb)\|size (b)' ); then
         # Generate output from path and size using: $(stat -c '%s' filepath)
         size=$(stat -c '%s' "$filepath")
     fi
