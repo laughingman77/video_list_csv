@@ -1,4 +1,8 @@
-
+# Tag v3.0.0
+## 29 Feb 2024
+* Optimisation
+## 28 Feb 2024
+* POSIX compliance
 # Tag v2.0.0
 ## 27 Feb 2024
 * Minor bugfixes and enhancements
