@@ -77,17 +77,15 @@ while IFS= read -r filepath; do
                 ;;
             'Resolution')
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
-                if test -z "$field" && test "$detect_if_not_in_filename" -eq 1; then
+                if test "$detect_if_not_in_filename" -eq 1  && test -z "$field"; then
                     [ -z "$json" ] && json=$(ffprobe -v error -show_streams -of json -i "$filepath")
-                    width=$(echo "$json" | jq '.streams[] | select(.codec_type == "video") .width')
-                    if [ -n "$width" ]; then
-                        [ "$width" -le 7680 ] && field='4320p'
-                        [ "$width" -le 3840 ] && field='2160p'
-                        [ "$width" -le 1920 ] && field='1080p'
-                        [ "$width" -le 720 ] && field='720p'
-                        [ "$width" -le 640 ] && field='480p'
+                    codecs=$(echo "$json" | jq '.streams[] | select(.codec_type == "video") | ((.index|tostring) + ":" + (if .width > 3840 then "4320p" elif .width > 1920 then "2160p" elif .width > 720 then "1080p" elif .width > 640 then "720p" else "480p" end))' | sed -r 's/\"//g')
+                    linecount=$(echo "$codecs" | tr '\n' ' ' | sed 's/[^:]//g' | awk '{ print length; }')
+                    if test "$linecount" -le 1; then
+                        field=$(echo "$codecs" | sed 's/[0-9]*\:\(.*\)/\1/g')
+                    else
+                        field=$(echo "$codecs" | tr '\n' ',' | sed 's/,/, /g' | sed 's/\([0-9]*\)\:/stream_\1:/g' | sed 's/, $//')
                     fi
-                    unset width
                 fi
                 ;;
             'Edition')
@@ -156,7 +154,14 @@ while IFS= read -r filepath; do
                 field=$(echo "$field" | sed -r 's/^\ //')
                 if [ "$detect_if_not_in_filename" -eq 1 ] && [ -z "$field" ]; then
                     [ -z "$json" ] && json=$(ffprobe -v error -show_streams -of json -i "$filepath")
-                    field=$(echo "$json" | jq '.streams[] | select(.codec_type == "video") .codec_name' | sed -r 's/\"//g'  | tr '[:lower:]' '[:upper:]' | sed -r 's/MPEG2VIDEO/MPEG2/' | sed -r 's/H264/AVC/')
+                    codecs=$(echo "$json" | jq '.streams[] | select(.codec_type == "video") | ((.index|tostring) + ":" + .codec_name)' | sed -r 's/\"//g' | tr '[:lower:]' '[:upper:]' | sed -r 's/MPEG2VIDEO/MPEG2/g' | sed -r 's/H264/AVC/g')
+                    linecount=$(echo "$codecs" | tr '\n' ' ' | sed 's/[^:]//g' | awk '{ print length; }')
+                    if test "$linecount" -le 1; then
+                        field=$(echo "$codecs" | sed 's/[0-9]*\:\(.*\)/\1/g')
+                    else
+                        field=$(echo "$codecs" | tr '\n' ',' | sed 's/,/, /g' | sed 's/\([0-9]*\)\:/stream_\1:/g' | sed 's/, $//')
+                    fi
+                    
                     # @TODO ffprobe/mediainfo unable tp detect DV/HDR10(+) yet
                     # color_space=$(echo "$json" | jq '.streams[0] .color_space' | sed -r 's/\"//g')
                     # color_transfer=$(echo "$json" | jq '.streams[0] .color_transfer' | sed -r 's/\"//g')
@@ -211,12 +216,17 @@ while IFS= read -r filepath; do
                 ( echo "$spaced_filename" | grep -iq '\ aac\ ' ) && codec='AAC'
                 # APE
                 ( echo "$spaced_filename" | grep -iq '\ ape\ ' ) && codec='APE'
-                if test "$detect_if_not_in_filename" -eq 1 && { test -z "$codec" || test -z "$channel_layout"; }; then
-                    [ -z "$json" ] && json=$(ffprobe -v error -show_streams -of json -i "$filepath")
-                    channel_layout=$(echo "$json" | jq '.streams[] | select(.codec_type == "audio") .channel_layout' | sed -r 's/\"//g' | sed -r 's/\(side\)//g' | sed -r 's/mono/1.0/g' | sed -r 's/stereo/2.0/g')
-                    codec=$(echo "$json" | jq '.streams[] | select(.codec_type == "audio") .codec_name' | sed -r 's/\"//g'  | tr '[:lower:]' '[:upper:]')
-                fi
                 field="$codec $channel_layout"
+                if test "$detect_if_not_in_filename" -eq 1  && { test -z "$codec" || test -z "$channel_layout"; }; then
+                    [ -z "$json" ] && json=$(ffprobe -v error -show_streams -of json -i "$filepath")
+                    codecs=$(echo "$json" | jq '.streams[] | select(.codec_type == "audio") | ((.index|tostring) + ":" + .codec_name + " " + .channel_layout)' | sed -r 's/\"//g' | tr '[:lower:]' '[:upper:]' | sed -r 's/\(SIDE\)//g' | sed -r 's/MONO/1.0/g' | sed -r 's/STEREO/2.0/g')
+                    linecount=$(echo "$codecs" | tr '\n' ' ' | sed 's/[^:]//g' | awk '{ print length; }')
+                    if test "$linecount" -le 1; then
+                        field=$(echo "$codecs" | sed 's/[0-9]*\:\(.*\)/\1/g')
+                    else
+                        field=$(echo "$codecs" | tr '\n' ',' | sed 's/,/, /g' | sed 's/\([0-9]*\)\:/stream_\1:/g' | sed 's/, $//')
+                    fi
+                fi
                 ;;
             'Release Type')
                 part_filename=$(echo "$spaced_filename" | grep -oP '\ \d{4}\ .*')
