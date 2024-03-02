@@ -109,7 +109,7 @@ If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls
 * If there is only one stream, it will list only the codec, as if it were in the filename, i.e.:
 
     `"DTS 5.1"`
-* If there are mu;tiple streams, it will list each stream number and its codec in a comma separated list, i.e.:
+* If there are multiple streams, it will list each stream number and its codec in a comma separated list, i.e.:
 
     `"stream_1:DTS 5.1, stream_2:AC3 2.0"`
 

@@ -24,22 +24,14 @@ while IFS= read -r filepath; do
     line=''
     episode=''
     season=''
+    series=''
     json=''
+    size=0
     filename=${filepath##*/}
     spaced_filename=$(echo "$filename" | sed -r 's/\./\ /g')
     # Detect if dir contains movies or TV shows
     if [ -z "$columns" ]; then
         echo "$spaced_filename" | grep -Piq '\ s\d{2}e\d{2}\ ' && columns="$tv_columns" || columns="$movie_columns"
-    fi
-    if ( echo "$columns" | grep -iq 'series\|season\|episode' ); then
-        episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
-        season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
-        series=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ s\d{2}e\d{2}\ )')
-    fi
-    size=0
-    if ( echo "$columns" | grep -iq 'size (gb)\|size (mb)\|size (kb)\|size (b)' ); then
-        # Generate output from path and size using: $(stat -c '%s' filepath)
-        size=$(stat -c '%s' "$filepath")
     fi
     # @see https://gist.github.com/biiont/290341b29657c0bb2df6
     col_arr="$columns|"
@@ -55,17 +47,21 @@ while IFS= read -r filepath; do
                 [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ \d{4}\ )')
                 ;;
             'Series')
+                test -z "$season" && season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
+                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
                 if test "$display_series_for_1" -eq 0 || { test "$season" -eq 1 && test "$episode" -eq 1; }; then
                     # Series name before season/episode
-                    field="$series"
+                    field=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ s\d{2}e\d{2}\ )')
                 fi
                 ;;
             'Season')
+                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
                 if test "$display_season_for_1" -eq 0 || test "$episode" -eq 1; then
-                    field="$season"
+                    field=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
                 fi
                 ;;
             'Episode')
+                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
                 field="$episode"
                 ;;
             'Year')
@@ -260,15 +256,19 @@ while IFS= read -r filepath; do
                 ( echo "$part_filename" | grep -iq 'remux' ) && field='Remux'
                 ;;
             'Size (GB)')
+                test -z "$size" && size=$(stat -c '%s' "$filepath")
                 field=$( echo "scale=2; $size / 1073741824" | bc )
                 ;;
             'Size (MB)')
+                test -z "$size" && size=$(stat -c '%s' "$filepath")
                 field=$( echo "scale=2; $size / 1048576" | bc )
                 ;;
             'Size (KB)')
+                test -z "$size" && size=$(stat -c '%s' "$filepath")
                 field=$( echo "scale=2; $size / 1024" | bc )
                 ;;
             'Size (B)')
+                test -z "$size" && size=$(stat -c '%s' "$filepath")
                 field="$size"
                 ;;
             'Filename')
