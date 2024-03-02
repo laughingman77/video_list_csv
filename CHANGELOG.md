@@ -1,8 +1,10 @@
 # Tag v3.0.0
+## Mar 2
+* Added handlling for multiple video/audio streams
 ## 29 Feb 2024
-* Optimisation
+* Code optimisation (at least x2 faster)
 ## 28 Feb 2024
-* POSIX compliance
+* POSIX compliance (requires change in `.env` for arrays)
 # Tag v2.0.0
 ## 27 Feb 2024
 * Minor bugfixes and enhancements

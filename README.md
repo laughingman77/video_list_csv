@@ -102,6 +102,17 @@ All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}` (case-insensitiv
 * S01E01
 * s01e01
 
+# Multiple audio/video streams
+
+If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls-back to probing the viedo file:
+
+* If there is only one stream, it will list only the codec, as if it were in the filename, i.e.:
+
+    `"DTS 5.1"`
+* If there are mu;tiple streams, it will list each stream number and its codec in a comma separated list, i.e.:
+
+    `"stream_1:DTS 5.1, stream_2:AC3 2.0"`
+
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/
 [kodi]: https://kodi.tv/
