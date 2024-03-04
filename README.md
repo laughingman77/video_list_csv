@@ -22,10 +22,10 @@ This script is intended for people who want to maintain an archive of legitmatel
 
 * git
 * jq
-* ffmpeg
+* mediainfo
 
 ```bash
-sudo apt install git jq ffmpeg
+sudo apt install git jq mediainfo
 ```
 
 ## Clone the reposirory
