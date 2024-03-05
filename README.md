@@ -12,6 +12,8 @@ You can define what columns you want to render and the order in the settings fil
 
 The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after other files in the archive are taken into account.
 
+**Note:** If most of the files in your archives do not have the resolution/audio/video formats in the filenames, then you may need to be patient while `mediainfo` scans the files.
+
 ## Disclaimer
 
 This script is intended for people who want to maintain an archive of legitmately backed up or original videos. However, it does contain possible configuration to list `Release type` of a video, this is specific to pirated media (see [Pirated movie release types][release_types]). **We do not condone Piracy in any way, it is against the law**, and this feature has only been added for completeness and nerdiness.
@@ -22,10 +24,10 @@ This script is intended for people who want to maintain an archive of legitmatel
 
 * git
 * jq
-* ffmpeg
+* mediainfo
 
 ```bash
-sudo apt install git jq ffmpeg
+sudo apt install git jq mediainfo
 ```
 
 ## Clone the reposirory
@@ -109,7 +111,7 @@ If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls
 * If there is only one stream, it will list only the codec, as if it were in the filename, i.e.:
 
     `"DTS 5.1"`
-* If there are mu;tiple streams, it will list each stream number and its codec in a comma separated list, i.e.:
+* If there are multiple streams, it will list each stream number and its codec in a comma separated list, i.e.:
 
     `"stream_1:DTS 5.1, stream_2:AC3 2.0"`
 
