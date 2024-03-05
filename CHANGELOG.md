@@ -1,3 +1,9 @@
+# Tag v3.1.0
+## Mar 5
+* Migrated from `ffrpobe` to `mediainfo` (dependenciesa changed)
+* Added validation at the start of the script for the necessary dependencies
+* Added detection for DV, HDR10 & HDR10+
+* Tightened up the scan speed.
 # Tag v3.0.0
 ## Mar 2
 * Added handlling for multiple video/audio streams
