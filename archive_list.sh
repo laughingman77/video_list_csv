@@ -23,6 +23,7 @@ extensions_re="\\($(echo "$extensions" | sed -r 's/\|/\\\|/g')\\)"
 
 columns=''
 filenames="$(mktemp)"
+streams="$(mktemp)"
 find "$dir" -type f -regex ".*\.$extensions_re" > "$filenames"
 while IFS= read -r filepath; do
     line=''
@@ -31,7 +32,8 @@ while IFS= read -r filepath; do
     json=''
     size=0
     filename=${filepath##*/}
-    spaced_filename=$(echo "$filename" | sed -r 's/\./\ /g')
+    # echo "$filename"
+    spaced_filename=$(echo "$filename" | sed 's/\./\ /g')
     # Detect if dir contains movies or TV shows
     if [ -z "$columns" ]; then
         echo "$spaced_filename" | grep -Piq '\ s\d{2}e\d{2}\ ' && columns="$tv_columns" || columns="$movie_columns"
@@ -41,6 +43,7 @@ while IFS= read -r filepath; do
     # For each column
     while [ -n "$col_arr" ]; do 
         column=${col_arr%%|*}
+        # echo "$column"
         field=''
         case "$column" in
             'Title')
@@ -50,21 +53,21 @@ while IFS= read -r filepath; do
                 [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ \d{4}\ )')
                 ;;
             'Series')
-                test -z "$season" && season=$(echo "$1" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
-                test -z "$episode" && episode=$(echo "$1" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
+                test -z "$season" && season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
+                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
                 if test "$display_series_for_1" -eq 0 || { test "$season" -eq 1 && test "$episode" -eq 1; }; then
                     field=$(echo "$spaced_filename" | grep -ioP '.*?(?=\ s\d{2}e\d{2}\ )')
                 fi
                 ;;
             'Season')
-                test -z "$episode" && episode=$(echo "$1" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
+                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
                 if test "$display_season_for_1" -eq 0 || test "$episode" -eq 1; then
-                    test -z "$season" && season=$(echo "$1" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
+                    test -z "$season" && season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
                     field="$season"
                 fi
                 ;;
             'Episode')
-                test -z "$episode" && episode=$(echo "$1" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
+                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
                 field="$episode"
                 ;;
             'Year')
@@ -76,21 +79,27 @@ while IFS= read -r filepath; do
                 ;;
             'Resolution')
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
+
                 if test "$detect_if_not_in_filename" -eq 1  && test -z "$field"; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
-                    jq_query='.media .track[] | select(."@type" == "Video") | (.ID + ":" +'
-                    jq_query=$jq_query' (if .Width|tonumber > 3840 then "4320p"'
-                    jq_query=$jq_query' elif .Width|tonumber > 1920 then "2160p"'
-                    jq_query=$jq_query' elif .Width|tonumber > 720 then "1080p"'
-                    jq_query=$jq_query' elif .Width|tonumber > 640 then "720p"'
-                    jq_query=$jq_query' else "480p" end))'
-                    resolutions=$(echo "$json" | jq "$jq_query" | sed -r 's/\"//g')
-                    linecount=$(echo "$resolutions" | tr '\n' ' ' | sed 's/[^:]//g' | awk '{ print length; }')
-                    if test "$linecount" -le 1; then
-                        field=$(echo "$resolutions" | sed 's/[0-9]*\:\(.*\)/\1/g')
-                    else
-                        field=$(echo "$resolutions" | tr '\n' ',' | sed 's/,/, /g' | sed 's/\([0-9]*\)\:/stream_\1:/g' | sed 's/, $//')
-                    fi
+                    echo "$json" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Width: .Width}' > "$streams"
+                    linecount=$(grep -c . "$streams")
+                    while IFS= read -r stream; do
+                        # Extract field values for a stream
+                        id=$(echo "$stream" | sed 's/.*"ID":"\([0-9]*\)".*/\1/')
+                        width=$(echo "$stream" | sed 's/.*"Width":"\([^"]*\)".*/\1/')
+                        # Map width to a resolution
+                        resolution='480p'
+                        test "$width" -gt 640 && resolution='720p'
+                        test "$width" -gt 720 && resolution='1080p'
+                        test "$width" -gt 1920 && resolution='2160p'
+                        test "$width" -gt 3840 && resolution='4320p'
+                        # Concatenate info parts into the field line
+                        test "$linecount" -gt 1 && field="${field}stream_${id}: "
+                        field="${field}${resolution}, "
+                    done < "$streams"
+                    # Strip trailing characters and bad spaces
+                    field=$(echo "$field" | sed 's/,\ $//')
                 fi
                 ;;
             'Edition')
@@ -158,22 +167,37 @@ while IFS= read -r filepath; do
                 ( echo "$spaced_filename" | grep -iq '\ hdr10\ ' ) && codec_features="$codec_features HDR10"
                 # HDR10+
                 ( echo "$spaced_filename" | grep -iq '\ hdr10+\ ' ) && codec_features="$codec_features HDR10+"
+                
                 if test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
-                    jq_query='.media .track[] | select(."@type" == "Video") | (.ID + ":" + .Format +'
-                    jq_query=$jq_query' (if .transfer_characteristics == null then "" elif .transfer_characteristics|contains("HLG") then " HLG" else "" end) +'
-                    jq_query=$jq_query' (if .HDR_Format == null then "" elif .HDR_Format|contains("Dolby Vision") then " DV" else "" end) +'
-                    jq_query=$jq_query' (if .HDR_Format_Compatibility == null then "" elif .HDR_Format_Compatibility|contains("HDR10 ") then " HDR10" else "" end) +'
-                    jq_query=$jq_query' (if .HDR_Format_Compatibility == null then "" elif .HDR_Format_Compatibility|contains("HDR10+ ") then " HDR10+" else "" end))'
-                    codecs=$(echo "$json" | jq "$jq_query" | sed -r 's/\"//g' | tr '[:lower:]' '[:upper:]')
-                    linecount=$(echo "$codecs" | tr '\n' ' ' | sed 's/[^:]//g' | awk '{ print length; }')
-                    if test "$linecount" -le 1; then
-                        field=$(echo "$codecs" | sed 's/[0-9]*\:\(.*\)/\1/g')
-                    else
-                        field=$(echo "$codecs" | tr '\n' ',' | sed 's/,/, /g' | sed 's/\([0-9]*\)\:/stream_\1:/g' | sed 's/, $//')
-                    fi
+                    echo "$json" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_format: .HDR_format, HDR_Format_Compatibility: .HDR_Format_Compatibility}' > "$streams"
+                    # https://unix.stackexchange.com/questions/482893/how-to-posix-ly-count-the-number-of-lines-in-a-string-variable
+                    linecount=$(grep -c . "$streams")
+                    while IFS= read -r stream; do
+                        # Extract field values for a stream
+                        id=$(echo "$stream" | sed 's/.*"ID":"\([0-9]*\)".*/\1/')
+                        codec=$(echo "$stream" | sed 's/.*"Format":"\([^"]*\)".*/\1/')
+                        test "$codec" = 'MPEG Video' && codec='MPEG'
+                        tc=$(echo "$stream" | sed 's/.*"transfer_characteristics":\([^",]*\),.*/\1/')
+                        test "$tc" = 'null' && tc='' || tc=$(echo "$tc" | sed 's/"//g')
+                        hdrf=$(echo "$stream" | sed 's/.*"HDR_format":\([^",]*\),.*/\1/')
+                        test "$hdrf" = 'null' && hdrf='' || hdrf=$(echo "$hdrf" | sed 's/"//g')
+                        hdrfc=$(echo "$stream" | sed 's/.*"HDR_Format_Compatibility":\([^"}]*\)}.*/\1/')
+                        test "$hdrfc" = 'null' && hdrfc='' || hdrfc=$(echo "$hdrfc" | sed 's/["}]//g')
+                        # Generate stream additional info parts for the field
+                        additional_info=""
+                        test "$tc" = 'HLG' && additional_info="$additional_info HLG"
+                        test "$(echo "$hdrf" | grep -iq 'dolby vision')" && additional_info="$additional_info DV"
+                        test "$(echo "$hdrfc" | grep -iq 'hdr10 ')" && additional_info="$additional_info HDR10"
+                        test "$(echo "$hdrfc" | grep -iq 'hdr10\+ ')" && additional_info="$additional_info HDR10+"
+                        # Concatenate the stream info parts into the field
+                        test "$linecount" -gt 1 && field="${field}stream_$id: "
+                        field="${field}${codec} ${additional_info}, "
+                    done < "$streams"
+                    # Strip trailing characters and bad spaces
+                    field=$(echo "$field" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
                 else
-                    field="$codec$codec_features"
+                    field="${codec}${codec_features}"
                 fi
                 ;;
             'Audio')
@@ -228,24 +252,35 @@ while IFS= read -r filepath; do
                     field="$codec $channel_layout"
                 else
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
-                    jq_query='.media .track[] | select(."@type" == "Audio") | (.ID + ":" + .Format'
-                    jq_query=$jq_query' + (if .Channels|tonumber == 1 then " 1.0"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 2 then " 2.0"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 3 then " 2.1"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 4 then " 3.1"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 5 then " 4.1"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 6 then " 5.1"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 7 then " 6.1"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 8 then " 7.1"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 9 then " 8.1"'
-                    jq_query=$jq_query' elif .Channels|tonumber == 10 then " 9.1" else "" end))'
-                    codecs=$(echo "$json" | jq "$jq_query" | sed -r 's/\"//g' | tr '[:lower:]' '[:upper:]')
-                    linecount=$(echo "$codecs" | tr '\n' ' ' | sed 's/[^:]//g' | awk '{ print length; }')
-                    if test "$linecount" -le 1; then
-                        field=$(echo "$codecs" | sed 's/[0-9]*\:\(.*\)/\1/g')
-                    else
-                        field=$(echo "$codecs" | tr '\n' ',' | sed 's/,/, /g' | sed 's/\([0-9]*\)\:/stream_\1:/g' | sed 's/, $//')
-                    fi
+                    streams="$(mktemp)"
+                    echo "$json" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels}' > "$streams"
+                    # https://unix.stackexchange.com/questions/482893/how-to-posix-ly-count-the-number-of-lines-in-a-string-variable
+                    linecount=$(grep -c . "$streams")
+                    while IFS= read -r stream; do
+                        # Extract field values for a stream
+                        id=$(echo "$stream" | sed 's/.*"ID":"\([0-9]*\)".*/\1/')
+                        channels=$(echo "$stream" | sed 's/.*"Channels":"\([0-9]*\)".*/\1/')
+                        test "$channels" = '1' && channels='1.0'
+                        test "$channels" = '2' && channels='2.0'
+                        test "$channels" = '4' && channels='3.1'
+                        test "$channels" = '5' && channels='4.1'
+                        test "$channels" = '6' && channels='5.1'
+                        test "$channels" = '7' && channels='6.1'
+                        test "$channels" = '8' && channels='7.1'
+                        format=$(echo "$stream" | sed -ne 's/.*"Format":"\([^"]*\)".*/\1/p')
+                        fcia=$(echo "$stream" | sed -ne 's/.*"Format_Commercial_IfAny":"\([^"]*\)".*/\1/p')
+                        test "$fcia" = 'Dolby Digital' && fcia='DD'
+                        test "$fcia" = 'DTS-HD High Resolution Audio' && fcia='DTS-HD'
+                        test "$fcia" = 'DTS-HD Master Audio' && fcia='DTS-HD MA'
+                        test "$fcia" = 'Dolby TrueHD' && fcia='TrueHD'
+                        test "$fcia" = 'Dolby Digital Plus with Dolby Atmos' && fcia='Atmos'
+                        test ! -z "$fcia" && format="$fcia"
+                        # Concatenate the stream info parts into the field
+                        test "$linecount" -gt 1 && field="${field}stream_$id: "
+                        field="${field}${format} ${channels}, "
+                    done < "$streams"
+                    # Strip trailing characters and bad spaces
+                    field=$(echo "$field" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
                 fi
                 ;;
             'Release Type')
@@ -280,19 +315,19 @@ while IFS= read -r filepath; do
                 ( echo "$part_filename" | grep -iq 'remux' ) && field='Remux'
                 ;;
             'Size (GB)')
-                test -z "$size" && size=$(stat -c '%s' "$filepath")
+                test "$size" -eq 0 && size=$(stat -c '%s' "$filepath")
                 field=$( echo "scale=2; $size / 1073741824" | bc )
                 ;;
             'Size (MB)')
-                test -z "$size" && size=$(stat -c '%s' "$filepath")
+                test "$size" -eq 0 && size=$(stat -c '%s' "$filepath")
                 field=$( echo "scale=2; $size / 1048576" | bc )
                 ;;
             'Size (KB)')
-                test -z "$size" && size=$(stat -c '%s' "$filepath")
+                test "$size" -eq 0 && size=$(stat -c '%s' "$filepath")
                 field=$( echo "scale=2; $size / 1024" | bc )
                 ;;
             'Size (B)')
-                test -z "$size" && size=$(stat -c '%s' "$filepath")
+                test "$size" -eq 0 && size=$(stat -c '%s' "$filepath")
                 field="$size"
                 ;;
             'Filename')
@@ -313,6 +348,7 @@ while IFS= read -r filepath; do
     output="${output}${line};"
 done < "$filenames"
 rm "$filenames"
+rm "$streams"
 
 # Add column headings
 line=''
