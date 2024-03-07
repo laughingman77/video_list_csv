@@ -180,18 +180,18 @@ while IFS= read -r filepath; do
                         id=$(echo "$stream" | sed 's/.*"ID":"\([0-9]*\)".*/\1/')
                         codec=$(echo "$stream" | sed 's/.*"Format":"\([^"]*\)".*/\1/')
                         test "$codec" = 'MPEG Video' && codec='MPEG'
-                        tc=$(echo "$stream" | sed 's/.*"transfer_characteristics":\([^",]*\),.*/\1/')
-                        test "$tc" = 'null' && tc='' || tc=$(echo "$tc" | sed 's/"//g')
-                        hdrf=$(echo "$stream" | sed 's/.*"HDR_format":\([^",]*\),.*/\1/')
-                        test "$hdrf" = 'null' && hdrf='' || hdrf=$(echo "$hdrf" | sed 's/"//g')
-                        hdrfc=$(echo "$stream" | sed 's/.*"HDR_Format_Compatibility":\([^"}]*\)}.*/\1/')
-                        test "$hdrfc" = 'null' && hdrfc='' || hdrfc=$(echo "$hdrfc" | sed 's/["}]//g')
+                        transfer_characteristics=$(echo "$stream" | sed 's/.*"transfer_characteristics":\([^",]*\),.*/\1/')
+                        test "$transfer_characteristics" = 'null' && transfer_characteristics='' || transfer_characteristics=$(echo "$transfer_characteristics" | sed 's/"//g')
+                        hdr_format=$(echo "$stream" | sed 's/.*"HDR_format":\([^",]*\),.*/\1/')
+                        test "$hdr_format" = 'null' && hdr_format='' || hdr_format=$(echo "$hdr_format" | sed 's/"//g')
+                        hdr_format_compatibility=$(echo "$stream" | sed 's/.*"HDR_Format_Compatibility":\([^"}]*\)}.*/\1/')
+                        test "$hdr_format_compatibility" = 'null' && hdr_format_compatibility='' || hdr_format_compatibility=$(echo "$hdr_format_compatibility" | sed 's/["}]//g')
                         # Generate stream additional info parts for the field
                         additional_info=""
-                        test "$tc" = 'HLG' && additional_info="$additional_info HLG"
-                        test "$(echo "$hdrf" | grep -iq 'dolby vision')" && additional_info="$additional_info DV"
-                        test "$(echo "$hdrfc" | grep -iq 'hdr10 ')" && additional_info="$additional_info HDR10"
-                        test "$(echo "$hdrfc" | grep -iq 'hdr10\+ ')" && additional_info="$additional_info HDR10+"
+                        test "$transfer_characteristics" = 'HLG' && additional_info="$additional_info HLG"
+                        test "$(echo "$hdr_format" | grep -iq 'dolby vision')" && additional_info="$additional_info DV"
+                        test "$(echo "$hdr_format_compatibility" | grep -iq 'hdr10 ')" && additional_info="$additional_info HDR10"
+                        test "$(echo "$hdr_format_compatibility" | grep -iq 'hdr10\+ ')" && additional_info="$additional_info HDR10+"
                         # Concatenate the stream info parts into the field
                         test "$linecount" -gt 1 && field="${field}stream_$id: "
                         field="${field}${codec} ${additional_info}, "
@@ -269,13 +269,13 @@ while IFS= read -r filepath; do
                         test "$channels" = '7' && channels='6.1'
                         test "$channels" = '8' && channels='7.1'
                         format=$(echo "$stream" | sed -ne 's/.*"Format":"\([^"]*\)".*/\1/p')
-                        fcia=$(echo "$stream" | sed -ne 's/.*"Format_Commercial_IfAny":"\([^"]*\)".*/\1/p')
-                        test "$fcia" = 'Dolby Digital' && fcia='DD'
-                        test "$fcia" = 'DTS-HD High Resolution Audio' && fcia='DTS-HD'
-                        test "$fcia" = 'DTS-HD Master Audio' && fcia='DTS-HD MA'
-                        test "$fcia" = 'Dolby TrueHD' && fcia='TrueHD'
-                        test "$fcia" = 'Dolby Digital Plus with Dolby Atmos' && fcia='Atmos'
-                        test ! -z "$fcia" && format="$fcia"
+                        format_commercial_ifany=$(echo "$stream" | sed -ne 's/.*"Format_Commercial_IfAny":"\([^"]*\)".*/\1/p')
+                        test "$format_commercial_ifany" = 'Dolby Digital' && format_commercial_ifany='DD'
+                        test "$format_commercial_ifany" = 'DTS-HD High Resolution Audio' && format_commercial_ifany='DTS-HD'
+                        test "$format_commercial_ifany" = 'DTS-HD Master Audio' && format_commercial_ifany='DTS-HD MA'
+                        test "$format_commercial_ifany" = 'Dolby TrueHD' && format_commercial_ifany='TrueHD'
+                        test "$format_commercial_ifany" = 'Dolby Digital Plus with Dolby Atmos' && format_commercial_ifany='Atmos'
+                        test ! -z "$format_commercial_ifany" && format="$format_commercial_ifany"
                         # Concatenate the stream info parts into the field
                         test "$linecount" -gt 1 && field="${field}stream_$id: "
                         field="${field}${format} ${channels}, "
@@ -283,6 +283,10 @@ while IFS= read -r filepath; do
                     # Strip trailing characters and bad spaces
                     field=$(echo "$field" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
                 fi
+                ;;
+            'Subtitles')
+                [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
+                field=$(echo "$json" | jq -c '[.media .track[] | select(."@type" == "Text") .Language] | unique' | sed 's/,/,\ /g' | sed 's/["\]]//g' | sed 's/["\[]//g')
                 ;;
             'Release Type')
                 part_filename=$(echo "$spaced_filename" | grep -oP '\ \d{4}\ .*')

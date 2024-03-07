@@ -76,16 +76,17 @@ The column names are separated by the `|` character.
 
 The possible columns are:
 
-* `Title`: (Only for Movies) the Movie title.
-* `Edition`: (Only for Movies) the release edition, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
-* `Series`: (Only for TV series) the TV series title.
-* `Season`: (Only for TV series) the TV series season.
-* `Episode`: (Only for TV series) the TV series episode.
+* `Title`: (Only for **Movies**) the Movie title.
+* `Edition`: (Only for  **Movies**) the release edition, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
+* `Series`: (Only for **TV series**) the TV series title.
+* `Season`: (Only for **TV series**) the TV series season.
+* `Episode`: (Only for **TV series**) the TV series episode.
 * `Year`: Relese date
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
-* `Video`: The video codec and colouration, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
-* `Audio`: the ausio codec and channel layout
-* `Release Type`: (not in the default configuration) Pirated release type - NOT recommended
+* `Video`: The video codec and colouration streams, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
+* `Audio`: The audio codec and channel layout
+* `Subtitles`: (**not in the default configuration**) The list of subtitle srteam/s.s
+* `Release Type`: (**not in the default configuration**) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
 * `Size (MB)`: File size in MB
 * `Size (KB)`: File size in KB
@@ -122,6 +123,8 @@ If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls
 
 # Thanks To
 
+* JSON formatter: https://jsonformatter.org/json-pretty-print
+* JQ query tester: https://jqkungfu.com/
 * Progressbar inspiration: https://github.com/albertomosconi/posixbar
 * Pseudo arrays: https://gist.github.com/biiont/290341b29657c0bb2df6
 * Padding a string: https://stackoverflow.com/a/74964817
