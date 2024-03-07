@@ -81,9 +81,10 @@ while IFS= read -r filepath; do
                 field=$(echo "$field"  | grep -ioP '\d{4}')
                 ;;
             'Resolution')
-                field=$(echo "$spaced_filename" | grep -oP '\d+p')
+                resolution=$(echo "$spaced_filename" | grep -oP '\d+p')
 
-                if test "$detect_if_not_in_filename" -eq 1  && test -z "$field"; then
+                if test "$force_detect" -eq 1 || { test "$detect_if_not_in_filename" -eq 1  && test -z "$resolution"; }; then
+                    echo "scanning for resolution..."
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Width: .Width}' > "$streams"
                     linecount=$(grep -c . "$streams")
@@ -103,6 +104,8 @@ while IFS= read -r filepath; do
                     done < "$streams"
                     # Strip trailing characters and bad spaces
                     field=$(echo "$field" | sed 's/,\ $//')
+                else
+                    field="$resolution"
                 fi
                 ;;
             'Edition')
@@ -171,7 +174,7 @@ while IFS= read -r filepath; do
                 # HDR10+
                 ( echo "$spaced_filename" | grep -iq '\ hdr10+\ ' ) && codec_features="$codec_features HDR10+"
                 
-                if test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; then
+                if test "$force_detect" -eq 1 || { test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; }; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_format: .HDR_format, HDR_Format_Compatibility: .HDR_Format_Compatibility}' > "$streams"
                     linecount=$(grep -c . "$streams")
@@ -250,9 +253,7 @@ while IFS= read -r filepath; do
                 # APE
                 ( echo "$spaced_filename" | grep -iq '\ ape\ ' ) && codec='APE'
 
-                if test "$detect_if_not_in_filename" -eq 0 || { test ! -z "$codec" && test ! -z "$channel_layout"; }; then
-                    field="$codec $channel_layout"
-                else
+                if test "$force_detect" -eq 1 || { test "$detect_if_not_in_filename" -eq 1 && { test -z "$codec" || test -z "$channel_layout"; }; }; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     streams="$(mktemp)"
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels}' > "$streams"
@@ -282,6 +283,8 @@ while IFS= read -r filepath; do
                     done < "$streams"
                     # Strip trailing characters and bad spaces
                     field=$(echo "$field" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
+                else
+                    field="$codec $channel_layout"
                 fi
                 ;;
             'Subtitles')
