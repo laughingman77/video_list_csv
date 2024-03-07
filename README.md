@@ -122,6 +122,8 @@ If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls
 
 # Thanks To
 
+* JSON formatter: https://jsonformatter.org/json-pretty-print
+* JQ query tester: https://jqkungfu.com/
 * Progressbar inspiration: https://github.com/albertomosconi/posixbar
 * Pseudo arrays: https://gist.github.com/biiont/290341b29657c0bb2df6
 * Padding a string: https://stackoverflow.com/a/74964817
