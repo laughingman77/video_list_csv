@@ -63,6 +63,8 @@ cp example.env .env
 # .env options
 
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
+* `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the Resolution/Video/Audio columns).
+  **Note**: This is turned off by default, because it can dramatically increase processing time.
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.
 * `tv_columns`: TV archive columns to render, and their order.

@@ -3,6 +3,7 @@
 * Added a progress bar for better UX
 * Supress the annoying `find: ‘.../lost+found’: Permission denied` - which is a system directory anyway
 * Added a `Subtitles` column
+* Added a `force_detect` option to the config
 # Tag v3.1.0
 ## Mar 5
 * Migrated from `ffrpobe` to `mediainfo` (dependenciesa changed)
