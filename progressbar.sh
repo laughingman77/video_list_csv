@@ -1,13 +1,5 @@
 #!/bin/sh
 
-is_integer () {
-    case "${1#[+-]}" in
-        (*[!0123456789]*) return 1 ;;
-        ('')              return 1 ;;
-        (*)               return 0 ;;
-    esac
-}
-
 # Generate a progress bar
 #
 # The bar autosizes to the terminal width and crops the length displayed with ellipsis
