@@ -1,3 +1,6 @@
+# Tag v3.1.1
+## Mar 6
+* Added a progress bar for better UX
 # Tag v3.1.0
 ## Mar 5
 * Migrated from `ffrpobe` to `mediainfo` (dependenciesa changed)

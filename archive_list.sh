@@ -1,8 +1,8 @@
 #!/bin/sh
 
-# https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
 command -v mediainfo >/dev/null 2>&1 || { echo >&2 "I require mediainfo but it's not installed."; exit 1; }
 command -v jq >/dev/null 2>&1 || { echo >&2 "I require jq but it's not installed."; exit 1; }
+. ./progressbar.sh || exit 1
 
 saveifs=${IFS}
 
@@ -25,6 +25,8 @@ columns=''
 filenames="$(mktemp)"
 streams="$(mktemp)"
 find "$dir" -type f -regex ".*\.$extensions_re" > "$filenames"
+files_total=$(grep -c . "$filenames")
+processing_file=0
 while IFS= read -r filepath; do
     line=''
     episode=''
@@ -32,13 +34,14 @@ while IFS= read -r filepath; do
     json=''
     size=0
     filename=${filepath##*/}
+    processing_file=$((processing_file + 1))
+    progressbar "$processing_file" "$files_total" "$filename" >&2
     # echo "$filename"
     spaced_filename=$(echo "$filename" | sed 's/\./\ /g')
     # Detect if dir contains movies or TV shows
     if [ -z "$columns" ]; then
         echo "$spaced_filename" | grep -Piq '\ s\d{2}e\d{2}\ ' && columns="$tv_columns" || columns="$movie_columns"
     fi
-    # @see https://gist.github.com/biiont/290341b29657c0bb2df6
     col_arr="$columns|"
     # For each column
     while [ -n "$col_arr" ]; do 
@@ -171,7 +174,6 @@ while IFS= read -r filepath; do
                 if test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_format: .HDR_format, HDR_Format_Compatibility: .HDR_Format_Compatibility}' > "$streams"
-                    # https://unix.stackexchange.com/questions/482893/how-to-posix-ly-count-the-number-of-lines-in-a-string-variable
                     linecount=$(grep -c . "$streams")
                     while IFS= read -r stream; do
                         # Extract field values for a stream
@@ -254,7 +256,6 @@ while IFS= read -r filepath; do
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     streams="$(mktemp)"
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels}' > "$streams"
-                    # https://unix.stackexchange.com/questions/482893/how-to-posix-ly-count-the-number-of-lines-in-a-string-variable
                     linecount=$(grep -c . "$streams")
                     while IFS= read -r stream; do
                         # Extract field values for a stream
@@ -380,3 +381,4 @@ IFS=${saveifs}
 
 # Replace ; with \n for printing
 echo "$output" | sed 's/;/\n/g'
+echo >&2
