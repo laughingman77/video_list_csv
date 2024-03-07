@@ -83,8 +83,7 @@ while IFS= read -r filepath; do
             'Resolution')
                 resolution=$(echo "$spaced_filename" | grep -oP '\d+p')
 
-                if test "$force_detect" -eq 1 || { test "$detect_if_not_in_filename" -eq 1  && test -z "$resolution"; }; then
-                    echo "scanning for resolution..."
+                if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1  && test -z "$resolution"; }; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Width: .Width}' > "$streams"
                     linecount=$(grep -c . "$streams")
@@ -174,7 +173,7 @@ while IFS= read -r filepath; do
                 # HDR10+
                 ( echo "$spaced_filename" | grep -iq '\ hdr10+\ ' ) && codec_features="$codec_features HDR10+"
                 
-                if test "$force_detect" -eq 1 || { test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; }; then
+                if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; }; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_format: .HDR_format, HDR_Format_Compatibility: .HDR_Format_Compatibility}' > "$streams"
                     linecount=$(grep -c . "$streams")
@@ -253,7 +252,7 @@ while IFS= read -r filepath; do
                 # APE
                 ( echo "$spaced_filename" | grep -iq '\ ape\ ' ) && codec='APE'
 
-                if test "$force_detect" -eq 1 || { test "$detect_if_not_in_filename" -eq 1 && { test -z "$codec" || test -z "$channel_layout"; }; }; then
+                if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1 && { test -z "$codec" || test -z "$channel_layout"; }; }; then
                     [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
                     streams="$(mktemp)"
                     echo "$json" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels}' > "$streams"
