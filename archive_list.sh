@@ -24,7 +24,7 @@ extensions_re="\\($(echo "$extensions" | sed -r 's/\|/\\\|/g')\\)"
 columns=''
 filenames="$(mktemp)"
 streams="$(mktemp)"
-find "$dir" -type f -regex ".*\.$extensions_re" > "$filenames"
+find "$dir" -type f -regex ".*\.$extensions_re" 2>&1 > "$filenames" | grep -v 'Permission denied' >&2
 files_total=$(grep -c . "$filenames")
 processing_file=0
 while IFS= read -r filepath; do
