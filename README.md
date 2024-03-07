@@ -110,10 +110,23 @@ If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls
 
 * If there is only one stream, it will list only the codec, as if it were in the filename, i.e.:
 
-    `"DTS 5.1"`
+```
+"AVC DV HDR10+"
+```
+
 * If there are multiple streams, it will list each stream number and its codec in a comma separated list, i.e.:
 
-    `"stream_1:DTS 5.1, stream_2:AC3 2.0"`
+```
+"stream_1: DTS 5.1, stream_2: AC3 2.0"
+```
+
+# Thanks To
+
+* Progressbar inspiration: https://github.com/albertomosconi/posixbar
+* Pseudo arrays: https://gist.github.com/biiont/290341b29657c0bb2df6
+* Padding a string: https://stackoverflow.com/a/74964817
+* Validation of dependencies: https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
+* Line count in a variable: https://unix.stackexchange.com/questions/482893/how-to-posix-ly-count-the-number-of-lines-in-a-string-variable
 
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/
