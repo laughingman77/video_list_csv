@@ -286,7 +286,7 @@ while IFS= read -r filepath; do
                 ;;
             'Subtitles')
                 [ -z "$json" ] && json=$(mediainfo --Output=JSON "$filepath")
-                field=$(echo "$json" | jq -c '[.media .track[] | select(."@type" == "Text") .Language] | unique' | sed 's/,/,\ /g' | sed 's/["\]]//g' | sed 's/["\[]//g')
+                field=$(echo "$json" | jq -c '[.media .track[] | select(."@type" == "Text") .Language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g')
                 ;;
             'Release Type')
                 part_filename=$(echo "$spaced_filename" | grep -oP '\ \d{4}\ .*')
