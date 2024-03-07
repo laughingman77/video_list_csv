@@ -127,6 +127,7 @@ If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls
 * Padding a string: https://stackoverflow.com/a/74964817
 * Validation of dependencies: https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
 * Line count in a variable: https://unix.stackexchange.com/questions/482893/how-to-posix-ly-count-the-number-of-lines-in-a-string-variable
+* Suppress Permission Denied messages: https://stackoverflow.com/questions/762348/how-can-i-exclude-all-permission-denied-messages-from-find
 
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/
