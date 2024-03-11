@@ -14,6 +14,10 @@ The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` a
 
 **Note:** If most of the files in your archives do not have the resolution/audio/video formats in the filenames, then you may need to be patient while `mediainfo` scans the files.
 
+**Note:** After quite some pain, trying to understand why `ffprobe` was not displaying any `Atmos` or `DV` data, I discovered that `Ubuntu 22.04` (my local dev machine) has only `ffmpeg v4` in the official repositories (WHAT? Yes, you heard me correctly). Although this script will work with the official `v4`, you will get missing data. To install `ffmpeg v6` as a minimum. You will need to use an unofficial repo, such as [ubuntuhandbook1/ffmpeg6][ffmpeg-6].
+
+**Note:** At the current state of things, `mediainfo` runs slower than `ffprobe`, however `ffprobe` does not reveal `HDR10` or `HDR10+` data.
+
 ## Disclaimer
 
 This script is intended for people who want to maintain an archive of legitmately backed up or original videos. However, it does contain possible configuration to list `Release type` of a video, this is specific to pirated media (see [Pirated movie release types][release_types]). **We do not condone Piracy in any way, it is against the law**, and this feature has only been added for completeness and nerdiness.
@@ -62,6 +66,7 @@ cp example.env .env
 
 # .env options
 
+* `scanner`: (ffprobe, mediainfo or auto) Select the prefrred scanning package. If set to `auto` then ffprobe takes preference but will fallback to mediainfo if no packages are detected.
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
 * `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the Resolution/Video/Audio columns).
   **Note**: This is turned off by default, because it can dramatically increase processing time.
@@ -139,3 +144,4 @@ If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls
 [kodi]: https://kodi.tv/
 [release_types]: https://en.wikipedia.org/wiki/Pirated_movie_release_types
 [wsl]: https://www.thewindowsclub.com/how-to-run-sh-or-shell-script-file-in-windows-10
+[ffmpeg-6]: https://ubuntuhandbook.org/index.php/2023/03/ffmpeg-6-0-released-how-to-install-in-ubuntu-22-04-20-04/
