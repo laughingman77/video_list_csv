@@ -1,5 +1,20 @@
 #!/bin/sh
 
+# Replace all newlines with a space.
+# This fixes potential issues in tag fields that contain newlines,
+# this produces in valid JSON which in turn break JQ.
+#
+# $1 String to strip newlines
+#
+# @returns string
+#
+# Example:
+#   metadata=$(ffprobe -v error -print_format json -show_format -show_streams "$video_file" | strip_newlines)
+strip_newlines() {
+    _result=$(echo "$1" | tr -d "\r" | tr -d "\n" | tr -d "\t")
+    printf "%s" "$_result"
+}
+
 # Return video file metadata using ffprobe in JSON format.
 #
 # $1 _video_file Path to the video file
@@ -9,8 +24,8 @@
 # Example:
 #   video_data "/path/to/video.mkv"
 video_data() {
-    _video_file=$1
-    _result=$(ffprobe -v quiet -print_format json -show_format -show_streams "$_video_file")
+    _video_file="$1"
+    _result=$(strip_newlines "$(ffprobe -v error -print_format json -show_format -show_streams "$_video_file")")
     echo "$_result"
 }
 
@@ -24,8 +39,8 @@ video_data() {
 # Example:
 #   foobar=$(resolution "$metadata")
 resolution() {
-    _metadata=$1
-    _video_streams=$(echo "$_metadata" | jq -c '.streams[] | select(.codec_type == "video") | {ID: .index, Width: .width}')
+    _metadata="$1"
+    _video_streams=$(printf "%s" "$_metadata" | jq -c '.streams[] | select(.codec_type == "video") | {ID: .index, Width: .width}')
     _linecount=$(echo "$_video_streams" | wc -l)
     _result=''
     IFS='
