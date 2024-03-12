@@ -2,7 +2,7 @@
 * Added scanner ability for `ffprobe` or `mediainfo`
 * Fixed `HDR10` and `HDR10+` detection with `mediainfio`
 * Enabled lomg names where possible for subtitles
-* Tightened up consistency for code naming
+* Tightened up consistency for codec naming
 ## Mar 7
 * Added a progress bar for better UX
 * Supress the annoying `find: ‘.../lost+found’: Permission denied` - which is a system directory anyway
