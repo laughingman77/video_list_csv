@@ -174,6 +174,6 @@ audio() {
 #   foobar=$(subtitle "$metadata")
 subtitle() {
     _metadata=$1
-    _result=$(echo "$_metadata" | jq -c '[.streams[] | select(.codec_type == "subtitle") .tags .language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g' | sed 's/^null//g')
+    _result=$(echo "$_metadata" | jq -c '[.streams[] | select(.codec_type == "subtitle") .tags .title] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g' | sed 's/^null//g')
     echo "$_result"
 }

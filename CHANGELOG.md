@@ -1,6 +1,6 @@
 ## Mar 12
 * Added scanner ability for `ffprobe` or `mediainfo`
-* Fixed `HDR10` and `HDR10+` detection with `mediainfio`
+* Fixed `HDR10` and `HDR10+` detection with `mediainfo`
 * Enabled lomg names where possible for subtitles
 * Tightened up consistency for codec naming
 ## Mar 7
