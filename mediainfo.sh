@@ -153,6 +153,6 @@ audio() {
 #   foobar=$(subtitle "$metadata")
 subtitle() {
     _metadata=$1
-    _result=$(echo "$_metadata" | jq -c '[.media .track[] | select(."@type" == "Text") .Title] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g' | sed 's/^null//g')
+    _result=$(echo "$_metadata" | jq -c '[.media .track[] | select(."@type" == "Text") .Language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g')
     echo "$_result"
 }
