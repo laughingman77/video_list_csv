@@ -18,7 +18,7 @@ The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` a
 
 **Note:** `ffprobe` is much faster than `mediainfo`, however it cannot fetch `HDR10` or `HDR10+` definitions at the present.
 
-**Note:** After quite some pain, trying to understand why `ffprobe` was not displaying any `Atmos` or `DV` data, I discovered that `Ubuntu 22.04` (my local dev machine) has only `ffmpeg v4` in the official repositories (WHAT? Yes, you heard me correctly). The take away from is that although this script will work with the official legacy versions of `ffrpobe` or `mediainfo`, for best results ensure that you have the latest versions installed. You may need to use an unofficial repo, such as [ubuntuhandbook1/ffmpeg6][ffmpeg-6].
+**Note:** After quite some pain, trying to understand why `ffprobe` was not displaying any `Atmos` or `DV` data, I discovered that `Ubuntu 22.04` (my local dev machine) has only `ffmpeg v4` in the official repositories (WHAT? Yes, you heard me correctly). The take away from is that although this script will work with the legacy versions of `ffprobe` or `mediainfo`, for best results ensure that you have the latest versions installed. You may need to use an unofficial repo, such as [ubuntuhandbook1/ffmpeg6][ffmpeg-6].
 
 ## Disclaimer
 

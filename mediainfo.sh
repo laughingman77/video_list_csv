@@ -60,7 +60,7 @@ resolution() {
 #   foobar=$(video "$metadata")
 video() {
     _metadata=$1
-    _video_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_Format: .HDR_Format, HDR_Format_Compatibility: .HDR_Format_Compatibility}')
+    _video_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_Format: .HDR_Format, Format_Version: .Format_Version, HDR_Format_Compatibility: .HDR_Format_Compatibility}')
     _linecount=$(echo "$_video_streams" | wc -l)
     _result=''
     IFS='
@@ -69,8 +69,12 @@ video() {
         # Extract field values for a stream
         _id=$(echo "$_video_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _codec=$(echo "$_video_stream" | sed -n 's/.*"Format":"\([^"]*\)".*/\1/p')
+        _format_version=$(echo "$_video_stream" | sed -n 's/.*"Format_Version":"\([^"]*\)".*/\1/p')
         test "${_codec#*"MPEG-2"}" != "$_codec" && _codec='MPEG-2'
         test "${_codec#*"MPEG-4"}" != "$_codec" && _codec='MPEG-4'
+        if [ "${_codec#*"MPEG Video"}" != "$_codec" ]; then
+            _codec="MPEG-$_format_version"
+        fi
         _transfer_characteristics=$(echo "$_video_stream" | sed -n 's/.*"transfer_characteristics":"\([^"]*\)".*/\1/p')
         test "$_transfer_characteristics" = 'null' && _transfer_characteristics=''
         _hdr_format=$(echo "$_video_stream" | sed -n 's/.*"HDR_Format":"\([^",]*\)".*/\1/p')
