@@ -4,15 +4,21 @@
 
 This script recursively scans a directory and creates a CSV with details of all Movie and TV media in that directory and sub-directories. This is aimed towards Home Theatre enthusiasts and their archives. However it can be used for any directories containing video media.
 
+The script allows you to define whether you want to use `ffprobe` or `mediainfo` to scan the library.
+
 This is a POSIX compliant bash script. It will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]).
 
-The script assumes these are separate archives for TV or Movie media, and automatically detects what kind of archive it is scanning and renders the appropriate archive list.
+The script assumes that you have separate archives for TV and movies, and automatically detects what kind of archive it is scanning and renders the appropriate archive list.
 
 You can define what columns you want to render and the order in the settings file.
 
 The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after other files in the archive are taken into account.
 
-**Note:** If most of the files in your archives do not have the resolution/audio/video formats in the filenames, then you may need to be patient while `mediainfo` scans the files.
+**Note:** The scan will be fastest if you have the media info in the fielname.
+
+**Note:** `ffprobe` is much faster than `mediainfo`, however it cannot fetch `HDR10` or `HDR10+` definitions at the present.
+
+**Note:** After quite some pain, trying to understand why `ffprobe` was not displaying any `Atmos` or `DV` data, I discovered that `Ubuntu 22.04` (my local dev machine) has only `ffmpeg v4` in the official repositories (WHAT? Yes, you heard me correctly). The take away from is that although this script will work with the legacy versions of `ffprobe` or `mediainfo`, for best results ensure that you have the latest versions installed. You may need to use an unofficial repo, such as [ubuntuhandbook1/ffmpeg6][ffmpeg-6].
 
 ## Disclaimer
 
@@ -21,6 +27,18 @@ This script is intended for people who want to maintain an archive of legitmatel
 # Installation
 
 ## Requirements
+
+### To use `ffprobe` (default scanner)
+
+* git
+* jq
+* ffprobe
+
+```bash
+sudo apt install git jq ffprobe
+```
+
+### To use `mediainfo`
 
 * git
 * jq
@@ -38,10 +56,10 @@ git clone git@github.com:laughingman77/video_list_csv.git
     
 # Configuration
 
-The `.env` file contains the configuration for various options in the script. The `example.env` contains all of the default settings. Copy `example.env` to `.env` and, if needed, configure `.env` to your requirements.
+The `.env` file contains the configuration for various options in the script. The `example.env` contains all of the default settings. Copy `example.env` to `.env` and, if needed, configure `.env` to your requirements:
 
 ```bash
-cp example.env .env
+cd video_list_csv && cp example.env .env
 ```
 
 # Usage
@@ -62,7 +80,10 @@ cp example.env .env
 
 # .env options
 
+* `scanner`: (ffprobe, mediainfo or auto) Select the prefrred scanning package. If set to `auto` then ffprobe takes preference but will fallback to mediainfo if no packages are detected.
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
+* `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the Resolution/Video/Audio columns).
+  **Note**: This is turned off by default, because it can dramatically increase processing time.
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.
 * `tv_columns`: TV archive columns to render, and their order.
@@ -76,16 +97,17 @@ The column names are separated by the `|` character.
 
 The possible columns are:
 
-* `Title`: (Only for Movies) the Movie title.
-* `Edition`: (Only for Movies) the release edition, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
-* `Series`: (Only for TV series) the TV series title.
-* `Season`: (Only for TV series) the TV series season.
-* `Episode`: (Only for TV series) the TV series episode.
+* `Title`: (Only for **Movies**) the Movie title.
+* `Edition`: (Only for  **Movies**) the release edition, ie. `Director's Cut`, `Cinematic Cut`, `Special Edition`, `Unrated`, `Uncut` etc.
+* `Series`: (Only for **TV series**) the TV series title.
+* `Season`: (Only for **TV series**) the TV series season.
+* `Episode`: (Only for **TV series**) the TV series episode.
 * `Year`: Relese date
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
-* `Video`: The video codec and colouration, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
-* `Audio`: the ausio codec and channel layout
-* `Release Type`: (not in the default configuration) Pirated release type - NOT recommended
+* `Video`: The video codec and colouration streams, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
+* `Audio`: The audio codec and channel layout
+* `Subtitles`: (**not in the default configuration**) The list of subtitle srteam/s.s
+* `Release Type`: (**not in the default configuration**) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
 * `Size (MB)`: File size in MB
 * `Size (KB)`: File size in KB
@@ -106,17 +128,40 @@ All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}` (case-insensitiv
 
 # Multiple audio/video streams
 
-If you have set `detect_if_not_in_filename=1` in the `.env` and the script falls-back to probing the viedo file:
+If the script falls-back to probing the viedo file:
 
-* If there is only one stream, it will list only the codec, as if it were in the filename, i.e.:
+* If there is only one stream, it will list only the codec, as if it were in the filename, eg:
 
-    `"DTS 5.1"`
-* If there are multiple streams, it will list each stream number and its codec in a comma separated list, i.e.:
+```
+"AVC DV HDR10+"
+```
 
-    `"stream_1:DTS 5.1, stream_2:AC3 2.0"`
+* If there are multiple streams, it will list each stream number and its codec in a comma separated list, eg:
+
+```
+"stream_1: DTS 5.1, stream_2: AC3 2.0"
+```
+
+# Thanks To
+
+Awesome online aplications used in development and testing:
+
+* JSONLint: https://jsonlint.com/
+* JSON Pretty Print: https://jsonformatter.org/json-pretty-print
+* jq kung fu: https://jqkungfu.com/
+
+Technical experts:
+
+* Progressbar inspiration: https://github.com/albertomosconi/posixbar
+* Pseudo arrays: https://gist.github.com/biiont/290341b29657c0bb2df6
+* Padding a string: https://stackoverflow.com/a/74964817
+* Validation of dependencies: https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script
+* Line count in a variable: https://unix.stackexchange.com/questions/482893/how-to-posix-ly-count-the-number-of-lines-in-a-string-variable
+* Suppress Permission Denied messages: https://stackoverflow.com/questions/762348/how-can-i-exclude-all-permission-denied-messages-from-find
 
 [jellyfin]: https://www.plex.tv/
 [plex]: https://www.plex.tv/
 [kodi]: https://kodi.tv/
 [release_types]: https://en.wikipedia.org/wiki/Pirated_movie_release_types
 [wsl]: https://www.thewindowsclub.com/how-to-run-sh-or-shell-script-file-in-windows-10
+[ffmpeg-6]: https://ubuntuhandbook.org/index.php/2023/03/ffmpeg-6-0-released-how-to-install-in-ubuntu-22-04-20-04/
