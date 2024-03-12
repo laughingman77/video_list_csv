@@ -47,6 +47,6 @@ progressbar() {
     # Trim the prpgress bar so that the line does not exceed the terminal width
     _progress_line=$(echo "$_progress_line" | sed -E "s/(.{${_col_width}})(.+)$/\1.../" )
     # Pad the line with spaces to terminal width chars
-    _progress_line=$_progress_line$(printf -- \ %.s $(seq -s ' ' $((_col_width-${#_progress_line}))))"\r\c"
+    _progress_line=$_progress_line$(printf -- \ %.s $(seq -s ' ' $((_col_width+3-${#_progress_line}))))"\r\c"
     echo "$_progress_line"
 }
