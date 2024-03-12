@@ -1,3 +1,4 @@
+# Tag v3.2.0
 ## 12/3/2024
 * Added scanner ability for `ffprobe` or `mediainfo`
 * Fixed `HDR10` and `HDR10+` detection with `mediainfo`
