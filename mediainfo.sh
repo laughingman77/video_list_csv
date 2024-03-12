@@ -69,7 +69,8 @@ video() {
         # Extract field values for a stream
         _id=$(echo "$_video_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _codec=$(echo "$_video_stream" | sed -n 's/.*"Format":"\([^"]*\)".*/\1/p')
-        test "$_codec" = 'MPEG Video' && _codec='MPEG'
+        test "${_codec#*"MPEG-2"}" != "$_codec" && _codec='MPEG-2'
+        test "${_codec#*"MPEG-4"}" != "$_codec" && _codec='MPEG-4'
         _transfer_characteristics=$(echo "$_video_stream" | sed -n 's/.*"transfer_characteristics":"\([^"]*\)".*/\1/p')
         test "$_transfer_characteristics" = 'null' && _transfer_characteristics=''
         _hdr_format=$(echo "$_video_stream" | sed -n 's/.*"HDR_Format":"\([^",]*\)".*/\1/p')
@@ -103,14 +104,12 @@ video() {
 #   foobar=$(audio "$metadata")
 audio() {
     _metadata=$1
-    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels}')
-    # echo "$_audio_streams"; exit 0
+    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Profile: .Format_Profile, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels}')
     _linecount=$(echo "$_audio_streams" | wc -l)
     _result=''
     IFS='
 '
     for _audio_stream in $_audio_streams; do
-        # echo "$_audio_stream"; exit 0
         # Extract field values for a stream
         _id=$(echo "$_audio_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _channels=$(echo "$_audio_stream" | sed -n 's/.*"Channels":"\([0-9]*\)".*/\1/p')
@@ -121,13 +120,18 @@ audio() {
         test "$_channels" = '6' && _channels='5.1'
         test "$_channels" = '7' && _channels='6.1'
         test "$_channels" = '8' && _channels='7.1'
+        _format_profile=$(echo "$_audio_stream" | sed -n 's/.*"Format_Profile":"\([^"]*\)".*/\1/p')
         _format=$(echo "$_audio_stream" | sed -n 's/.*"Format":"\([^"]*\)".*/\1/p')
+        if [ "${_format#*"MPEG Audio"}" != "$_format" ]; then
+            _format='MP'$(echo "$_format_profile" | sed -n 's/Layer \([0-9]*\)/\1/p')
+        fi
         _format_commercial_ifany=$(echo "$_audio_stream" | sed -n 's/.*"Format_Commercial_IfAny":"\([^"]*\)".*/\1/p')
-        test "$_format_commercial_ifany" = 'Dolby Digital' && _format_commercial_ifany='DD'
-        test "$_format_commercial_ifany" = 'DTS-HD High Resolution Audio' && _format_commercial_ifany='DTS-HD'
-        test "$_format_commercial_ifany" = 'DTS-HD Master Audio' && _format_commercial_ifany='DTS-HD MA'
-        test "$_format_commercial_ifany" = 'Dolby TrueHD' && _format_commercial_ifany='TrueHD'
+        test "${_format_commercial_ifany#*"Dolby Digital Plus"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DD+'
+        test "${_format_commercial_ifany#*"Dolby Digital"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DD'
+        test "${_format_commercial_ifany#*"DTS-HD High Resolution Audio"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DTS-HD'
+        test "${_format_commercial_ifany#*"DTS-HD Master Audio"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DTS-HD MA'
         test "${_format_commercial_ifany#*"Atmos"}" != "$_format_commercial_ifany" && _format_commercial_ifany='Atmos'
+        test "${_format_commercial_ifany#*"TrueHD"}" != "$_format_commercial_ifany" && _format_commercial_ifany='TrueHD'
         test -n "$_format_commercial_ifany" && _format="$_format_commercial_ifany"
         # Concatenate the stream info parts into the field
         test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
@@ -149,6 +153,6 @@ audio() {
 #   foobar=$(subtitle "$metadata")
 subtitle() {
     _metadata=$1
-    _result=$(echo "$_metadata" | jq -c '[.media .track[] | select(."@type" == "Text") .Language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g')
+    _result=$(echo "$_metadata" | jq -c '[.media .track[] | select(."@type" == "Text") .Title] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g' | sed 's/^null//g')
     echo "$_result"
 }

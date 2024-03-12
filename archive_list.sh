@@ -32,7 +32,7 @@ else
         fi
     fi
 fi
-printf "setting scanner to %s\n" "$scanner" 1>&2
+printf "setting scanner to %s\n\n" "$scanner" 1>&2
 # shellcheck source=./ffprobe.sh
 . "./${scanner}.sh" || exit 1
 
@@ -57,7 +57,6 @@ while IFS= read -r filepath; do
     filename=${filepath##*/}
     processing_file=$((processing_file + 1))
     progressbar "$processing_file" "$files_total" "$filename" >&2
-    # echo "$filename";exit 0
     spaced_filename=$(echo "$filename" | sed 's/\./\ /g')
     # Detect if dir contains movies or TV shows
     if [ -z "$columns" ]; then
@@ -67,7 +66,6 @@ while IFS= read -r filepath; do
     # For each column
     while [ -n "$col_arr" ]; do 
         column=${col_arr%%|*}
-        # echo "$column"; exit 0
         field=''
         case "$column" in
             'Title')

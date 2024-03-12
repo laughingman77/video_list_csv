@@ -1,16 +1,17 @@
 #!/bin/sh
 
-# Replace all newlines with a space.
-# This fixes potential issues in tag fields that contain newlines,
-# this produces in valid JSON which in turn break JQ.
+# Replace control charaters with a space.
 #
-# $1 String to strip newlines
+# This fixes potential issues in tag fields that contain newlines and tabs,
+# which causes ffprobe to produce invalid JSON which in turn breaks JQ.
+#
+# $1 String to clean
 #
 # @returns string
 #
 # Example:
-#   metadata=$(ffprobe -v error -print_format json -show_format -show_streams "$video_file" | strip_newlines)
-strip_newlines() {
+#   metadata=$(strip_control_chars "$(ffprobe -v error -print_format json -show_format -show_streams "$_video_file")")
+strip_control_chars() {
     _result=$(echo "$1" | tr -d "\r" | tr -d "\n" | tr -d "\t")
     printf "%s" "$_result"
 }
@@ -25,7 +26,7 @@ strip_newlines() {
 #   video_data "/path/to/video.mkv"
 video_data() {
     _video_file="$1"
-    _result=$(strip_newlines "$(ffprobe -v error -print_format json -show_format -show_streams "$_video_file")")
+    _result=$(strip_control_chars "$(ffprobe -v error -print_format json -show_format -show_streams "$_video_file")")
     echo "$_result"
 }
 
@@ -89,8 +90,10 @@ video() {
         test "${_codec#*"/ AVC /"}" != "$_codec" && _codec='AVC'
         test "${_codec#*"HEVC"}" != "$_codec" && _codec='HEVC'
         test "${_codec#*"VC-1"}" != "$_codec" && _codec='VC-1'
-        test "${_codec#*"MPEG-2 video"}" != "$_codec" && _codec='MPEG-2'
+        test "${_codec#*"MPEG-2"}" != "$_codec" && _codec='MPEG-2'
+        test "${_codec#*"MPEG-4"}" != "$_codec" && _codec='MPEG-4'
         test "${_codec#*"Motion JPEG"}" != "$_codec" && _codec='MJPEG'
+        test "${_codec#*"VP9"}" != "$_codec" && _codec='VP9'
         test "${_color_transfer#*"arib-std-b67"}" != "$_color_transfer" && _additional_info="${_additional_info}HLG "
         if [ "$( echo "$_metadata" | jq '.streams[] | select(.codec_type == "video") | has("side_data_list")' )" = 'true' ]; then
             if [ ! "$(echo "$_metadata" | jq '.streams[] | select(.codec_type == "video") | .side_data_list[] | select(.side_data_type == "DOVI configuration record") // false')" = 'false' ]; then
@@ -133,6 +136,11 @@ audio() {
         test "${_codec#*"Atmos"}" != "$_codec" && _codec='Atmos'
         test "${_codec#*"DTS:X"}" != "$_codec" && _codec='DTS:X'
         test "${_codec#*"AC-3"}" != "$_codec" && _codec='AC-3'
+        test "${_codec#*"Opus"}" != "$_codec" && _codec='Opus'
+        test "${_codec#*"Windows Media Audio"}" != "$_codec" && _codec='WMA'
+        test "${_codec#*"MP2"}" != "$_codec" && _codec='MP2'
+        test "${_codec#*"MP3"}" != "$_codec" && _codec='MP3'
+        test "${_codec#*"FLAC"}" != "$_codec" && _codec='FLAC'
         test "${_codec_long_name#*"AAC"}" != "$_codec_long_name" && _codec='AAC'
         test "${_codec_long_name#*"PCM"}" != "$_codec_long_name" && _codec='PCM'
         _channel_layout=$(echo "$_audio_stream" | sed -n 's/.*"channel_layout":"\([^"]*\)".*/\1/p' | sed 's/(side)//' | sed 's/stereo/2.0/' | sed 's/mono/1.0/')
@@ -166,6 +174,6 @@ audio() {
 #   foobar=$(subtitle "$metadata")
 subtitle() {
     _metadata=$1
-    _result=$(echo "$_metadata" | jq -c '[.streams[] | select(.codec_type == "subtitle").tags.language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g')
+    _result=$(echo "$_metadata" | jq -c '[.streams[] | select(.codec_type == "subtitle") .tags .language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g' | sed 's/^null//g')
     echo "$_result"
 }
