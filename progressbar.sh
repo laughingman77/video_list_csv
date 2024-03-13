@@ -17,16 +17,16 @@
 # done
 progressbar() {
     _Default_Bar_Width=30
-    if echo "$1" | grep -q '\-\-bar\-width='; then
+    if echo "$1" | grep -q -- '--bar-width='; then
         _bar_width=$(echo "$1" | sed 's/^--bar-width=\(.*\)/\1/')
         _done=$2
         _todo=$3
-        [ -z "$4" ] &&  _phrase='' || _phrase=$4
+        [ -z "$4" ] && _phrase='' || _phrase=$4
     else
         _bar_width=$_Default_Bar_Width
         _done=$1
         _todo=$2
-        [ -z "$3" ] &&  _phrase='' || _phrase=$3
+        [ -z "$3" ] && _phrase='' || _phrase=$3
     fi
     if [ -z "$_done" ] || [ "$_done" != "${_done#*[!0123456789]}" ] ; then echo "progressbar: _done ($_done) is not an integer."; exit 1; fi
     if [ -z "$_todo" ] || [ "$_todo" != "${_todo#*[!0123456789]}" ] ; then echo "progressbar: _todo ($_todo) is not an integer."; exit 1; fi
@@ -48,5 +48,5 @@ progressbar() {
     _progress_line=$(echo "$_progress_line" | sed -E "s/(.{${_col_width}})(.+)$/\1.../" )
     # Pad the line with spaces to terminal width chars
     _progress_line=$_progress_line$(printf -- \ %.s $(seq -s ' ' $((_col_width+3-${#_progress_line}))))"\r\c"
-    echo "$_progress_line"
+    printf "%b" "$_progress_line"
 }
