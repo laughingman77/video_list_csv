@@ -60,7 +60,6 @@ while IFS= read -r filepath; do
     spaced_filename=$(echo "$filename" | sed 's/\./\ /g')
     # Detect if dir contains movies or TV shows
     if [ -z "$columns" ]; then
-        # shellcheck disable=SC2128
         echo "$spaced_filename" | grep -Piq ' s\d{2}e\d{2} ' && columns="$tv_columns" || columns="$movie_columns"
     fi
     col_arr="$columns|"
@@ -332,4 +331,3 @@ IFS=${saveifs}
 
 # Replace ; with \n for printing
 echo "$output" | sed 's/;/\n/g'
-echo >&2
