@@ -1,10 +1,9 @@
 on: [push, pull_request]
 jobs:
-  linting:
+  shellcheck:
+    name: ShellCheck
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Run Shellcheck
-        env:
-          REPORT_ONLY: true
-          SHOW_ERRORS: true
         run: bash <(curl -s https://raw.githubusercontent.com/CICDToolbox/shellcheck/master/pipeline.sh)

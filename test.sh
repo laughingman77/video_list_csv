@@ -1,9 +1,14 @@
 #!/bin/sh
 
-# Manual testing: Find all script files and shellcheck them
-# @see https://github.com/koalaman/shellcheck/issues/143
-for f in $({ find . -type f -regex '.*\.\w*sh'
-    file ./* | grep 'shell script' | cut -d: -f1
-    } | sort -u); do
-  shellcheck "$f"
+EXITCODE=0
+find . -type f -name "*.sh" | (while read -r file; do
+    printf "Checking %s\n" "$file"
+    if ERRORS=$(shellcheck --format=gcc "$file"); then
+        printf "\e[32m%s\e[0m\n" "OK"
+    else
+        printf "\e[31m%s\e[0m\n" "$ERRORS"
+        EXITCODE=1
+    fi
 done
+
+exit $EXITCODE)

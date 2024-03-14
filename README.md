@@ -142,6 +142,63 @@ If the script falls-back to probing the viedo file:
 "stream_1: DTS 5.1, stream_2: AC3 2.0"
 ```
 
+# Testing
+
+## Locally
+
+A script has ben created to manually lint all files, run:
+
+```bash
+cd video_list_csv
+./test.sh
+```
+
+Expected output:
+
+```bash
+$ ./test.sh 
+Checking ./ffprobe.sh
+OK
+Checking ./archive_list.sh
+OK
+Checking ./test.sh
+OK
+Checking ./mediainfo.sh
+OK
+Checking ./progressbar.sh
+OK
+```
+
+## Simulate GitHub Actions locally
+
+CI/CD linting is implemented using GitHub Actions. You can run the pipelines locally, using [nektos/act][act]:
+
+```bash
+apt install act
+cd video_list_csv
+sudo act
+```
+
+This should give output similar to:
+
+```bash
+...
+| -------------------------------------------------------------------------- Stage 1 - Parameters --
+|  No parameters given
+| --------------------------------------------------------------- Stage 2 - Install Prerequisites --
+|  [  OK  ] docker pull --quiet koalaman/shellcheck:stable
+| ------------------------------------------------------------ Stage 3 - Run shellcheck (v0.10.0) --
+|  [  OK  ] archive_list.sh
+|  [  OK  ] ffprobe.sh
+|  [  OK  ] mediainfo.sh
+|  [  OK  ] progressbar.sh
+|  [  OK  ] test.sh
+| ------------------------------------------------------------------------------ Stage 4 - Report --
+|  Total: 5, OK: 5, Failed: 0, Skipped: 0
+| ---------------------------------------------------------------------------- Stage 5 - Complete --
+...
+```
+
 # Thanks To
 
 Awesome online aplications used in development and testing:
@@ -165,3 +222,4 @@ Technical experts:
 [release_types]: https://en.wikipedia.org/wiki/Pirated_movie_release_types
 [wsl]: https://www.thewindowsclub.com/how-to-run-sh-or-shell-script-file-in-windows-10
 [ffmpeg-6]: https://ubuntuhandbook.org/index.php/2023/03/ffmpeg-6-0-released-how-to-install-in-ubuntu-22-04-20-04/
+[act]: https://github.com/nektos/act
