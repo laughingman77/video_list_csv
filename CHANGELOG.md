@@ -1,3 +1,9 @@
+# Tag v3.2.1
+## 15/3/2024
+* Fixed all issues breaking the scripts running in a bash environment (arch linux)
+* Added GitHub actions for automated shellcheck linting
+* Added new test.sh for local testing of all bash scripts
+* Fixed columns in example.env somehow reverting to array vars
 # Tag v3.2.0
 ## 12/3/2024
 * Added scanner ability for `ffprobe` or `mediainfo`
