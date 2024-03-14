@@ -157,6 +157,7 @@ Expected output:
 
 ```bash
 $ ./test.sh 
+.env does not exist, generating the default .env...
 Checking ./ffprobe.sh
 OK
 Checking ./archive_list.sh
@@ -183,19 +184,18 @@ This should give output similar to:
 
 ```bash
 ...
-| -------------------------------------------------------------------------- Stage 1 - Parameters --
-|  No parameters given
-| --------------------------------------------------------------- Stage 2 - Install Prerequisites --
-|  [  OK  ] docker pull --quiet koalaman/shellcheck:stable
-| ------------------------------------------------------------ Stage 3 - Run shellcheck (v0.10.0) --
-|  [  OK  ] archive_list.sh
-|  [  OK  ] ffprobe.sh
-|  [  OK  ] mediainfo.sh
-|  [  OK  ] progressbar.sh
-|  [  OK  ] test.sh
-| ------------------------------------------------------------------------------ Stage 4 - Report --
-|  Total: 5, OK: 5, Failed: 0, Skipped: 0
-| ---------------------------------------------------------------------------- Stage 5 - Complete --
+| beginning shell linting...
+| not excluding any dirs
+| finding and linting all shell scripts/files via shellcheck...
+| [PASS]: shellcheck - successfully linted: ./ffprobe.sh
+| [PASS]: shellcheck - successfully linted: ./archive_list.sh
+| [PASS]: shellcheck - successfully linted: ./test.sh
+| [PASS]: shellcheck - successfully linted: ./mediainfo.sh
+| [PASS]: shellcheck - successfully linted: ./progressbar.sh
+| finding and linting all files with shell shebangs via shellcheck...
+| looking for subdirectories of bin directories that are not usable via PATH...
+| looking for programs in PATH that have a filename suffix
+| done
 ...
 ```
 
