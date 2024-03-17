@@ -1,5 +1,37 @@
 #!/bin/sh
 
+# Extract a Movie/TV name from a filename
+# @param $1 _spaced_filename Filename with '.' replaced by ' '
+# @returns string
+title() {
+    _spaced_filename="$1"
+    # Title with date in brackets
+    _title=$(echo "$_spaced_filename" | grep -ioP '.*?(?= \(\d{4}\) )')
+    # Title with date
+    [ -z "$_title" ] && _title=$(echo "$_spaced_filename" | grep -ioP '.*?(?= \d{4} )')
+    # Fallback - filename minus the extension
+    [ -z "$_title" ] && _title=$(echo "$_spaced_filename" | sed -n 's/^\(.*\)\ [0-9a-z]*$/\1/Ip')
+    echo "$_title"
+}
+
+# Extract the parent directory from a filepath
+# @param $1 _filepath
+# @returns string
+parent_directory() {
+    _filepath="$1"
+    _parent_directory=$(echo "$_filepath" | sed 's/^.*\/\(.*\)\/.*$/\1/')
+    echo "$_parent_directory"
+}
+
+# Extract the grandparent directory from a filepath
+# @param $1 _filepath
+# @returns string
+grandparent_directory() {
+    _filepath="$1"
+    _parent_directory=$(echo "$_filepath" | sed 's/^.*\/\(.*\)\/.*\/.*$/\1/')
+    echo "$_parent_directory"
+}
+
 saveifs=${IFS}
 
 . ./progressbar.sh || exit 1
@@ -69,10 +101,30 @@ while IFS= read -r filepath; do
         field=''
         case "$column" in
             'Title')
-                # Title with date in brackets
-                field=$(echo "$spaced_filename" | grep -ioP '.*?(?= \(\d{4}\) )')
-                # Title with date
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -ioP '.*?(?= \d{4} )')
+                field=$(title "$spaced_filename")
+
+                parent_directory=$(parent_directory "$filepath")
+                extras_suffix=$(echo "$spaced_filename" | sed -n 's/^.*[-_\ ]\(trailer\|sample\|scene\|clip\|interview\|behindthescenes\|deleted\|deletedscene\|featurette\|short\|other\|extra\)\.[0-9a-z]*$/\1/Ip')
+                
+                if [ "$field" = 'sample' ] || [ "$field" = 'trailer' ] || [ "$field" = 'theme' ]; then
+                    # Jellyfin extras special filename
+                    if echo "$parent_directory" | grep -iq '^behind the scenes\|deleted scenes\|interviews\|scenes\|samples\|shorts\|featurettes\|clips\|other\|extras\|trailers$'; then
+                        # Edge case of extras special filename in an extras directory 
+                        grandparent_directory=$(grandparent_directory "$filepath")
+                        grandparent_directory=$(title "$grandparent_directory ")
+                        field="$grandparent_directory - $parent_directory - $field"
+                    else
+                        field=$(title "$parent_directory")" - $field"
+                    fi
+                elif echo "$parent_directory" | grep -iq '^behind the scenes\|deleted scenes\|interviews\|scenes\|samples\|shorts\|featurettes\|clips\|other\|extras\|trailers$'; then
+                    # Jellyfin/plex/kodi extras directory
+                    grandparent_directory=$(grandparent_directory "$filepath")
+                    grandparent_directory=$(title "$grandparent_directory ")
+                    field="$grandparent_directory - $parent_directory - $field"
+                elif test -n "$extras_suffix"; then
+                    # Jellyfin/plex extras filename suffix
+                    field=$(title "$parent_directory")" - $extras_suffix"
+                fi
                 ;;
             'Series')
                 test -z "$season" && season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
@@ -110,13 +162,13 @@ while IFS= read -r filepath; do
                 # Strip the file extension
                 part_filename=$(echo "$spaced_filename" | sed -r 's/\ [0-9a-z]*$//I')
                 # Edition in curly brackets (Plex)
-                field=$(echo "$part_filename" | sed -nr 's/.*\{edition-(.*)\}.*/\1/p')
+                field=$(echo "$part_filename" | sed -nr 's/.*\{edition-(.*)\}.*/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Edition after date in brackets and hyphen (jellyin & kodi)
-                [ -z "$field" ] && field=$(echo "$part_filename" | sed -nr 's/.*\([0-9]{4}\)\ -\ (.*)/\1/p')
+                [ -z "$field" ] && field=$(echo "$part_filename" | sed -nr 's/.*\([0-9]{4}\)\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Edition after date in brackets, tmdbid/imdbid in square brackets and hyphen (jellyin)
-                [ -z "$field" ] && field=$(echo "$part_filename" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p')
+                [ -z "$field" ] && field=$(echo "$part_filename" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Fallback
-                [ -z "$field" ] && field=$(echo "$part_filename" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | tr '\n' ' ' | sed 's/^\ //' | sed 's/\ $//')
+                [ -z "$field" ] && field=$(echo "$part_filename" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | tr '\n' ' ' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
                 ;;
             'Video')
                 codec=''
