@@ -4,21 +4,23 @@
 
 This script recursively scans a directory and creates a CSV with details of all Movie and TV media in that directory and sub-directories. This is aimed towards Home Theatre enthusiasts and their archives. However it can be used for any directories containing video media.
 
-The script allows you to define whether you want to use `ffprobe` or `mediainfo` to scan the library.
+The script scans using `ffprobe` or `mediainfo` to scan the library, as automatic detection, as a CLI argument or globally in the `.env` file.
 
-This is a POSIX compliant bash script. It will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]).
+This is a POSIX compliant bash script. It will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]) (untested).
 
-The script assumes that you have separate archives for TV and movies, and automatically detects what kind of archive it is scanning and renders the appropriate archive list.
+The script assumes that you have separate archives for TV and movies, and automatically detects what kind of archive it is scanning and renders the appropriate archive list. You can also define what kinf of list you want as a CLI argument or globally in the `.env` file.
 
-You can define what columns you want to render and the order in the settings file.
+You can define what columns you want to render and the order in the settings file. An extra `Sort` column is automatically added to the end of the columns, to allow proper sorting (no other columns are 100% reliable).
 
 The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after other files in the archive are taken into account.
 
-**Note:** The scan will be fastest if you have the media info in the fielname.
+**Note:** The scan will be fastest if you have the media info in the filename.
+
+**Note:**  The automatic detection is based on the format of the first video filename that the script parses. If you have extras in your archive, you may want to specify the archive type as a CLI option: `-t {tv,movie}`.
 
 **Note:** `ffprobe` is much faster than `mediainfo`, however it cannot fetch `HDR10` or `HDR10+` definitions at the present.
 
-**Note:** After quite some pain, trying to understand why `ffprobe` was not displaying any `Atmos` or `DV` data, I discovered that `Ubuntu 22.04` (my local dev machine) has only `ffmpeg v4` in the official repositories (WHAT? Yes, you heard me correctly). The take away from is that although this script will work with the legacy versions of `ffprobe` or `mediainfo`, for best results ensure that you have the latest versions installed. You may need to use an unofficial repo, such as [ubuntuhandbook1/ffmpeg6][ffmpeg-6].
+**Note:** After quite some pain, trying to understand why `ffprobe` was not displaying any `Atmos` or `DV` data, I discovered that `Ubuntu 22.04` (one of my  dev machines) has only `ffmpeg v4` in the official repositories (WHAT? Yes, you heard me correctly). The take away from is that although this script will work with the legacy versions of `ffprobe` or `mediainfo`, for best results ensure that you have the latest versions installed. You may need to use an unofficial repo, such as [ubuntuhandbook1/ffmpeg6][ffmpeg-6].
 
 ## Disclaimer
 
@@ -68,22 +70,28 @@ cd video_list_csv && cp example.env .env
 1. In your new spreadsheet, duplicate the `Archive Template` sheet for your archive disk, and give it a meaningful name.
 1. Run the script:
     ```bash
-    sh archive_list.sh /path/to/archive/dir/ > ./archive.csv
+    sh archive_list.sh /path/to/archive/dir/ > ~/archive.csv
     ```
-    or
+    Or
     ```bash
-    ./archive_list.sh /path/to/archive/dir/ > ./archive.csv
+    ./archive_list.sh /path/to/archive/dir/ > ~/archive.csv
     ```
 1. Import `archive.csv` into your spreadseet program.
 1. Copy the cells from the imported CSV data and paste it into your archive sheet at cell `A4`.
 1. Sort the individual archive file rows as you wish, for readability.
 
+## CLI Options
+
+* `-h, -?, --help` Display the help text.
+* `-s, --scanner` Set the scanner program (`ffprobe` or `mediainfo`).
+* `-t, --type` Set the archive type (`tv` or `movie`).
+
 # .env options
 
-* `scanner`: (ffprobe, mediainfo or auto) Select the prefrred scanning package. If set to `auto` then ffprobe takes preference but will fallback to mediainfo if no packages are detected.
+* `scanner`: (`ffprobe`, `mediainfo`) Select the preferred scanning program globally. If not set, then ffprobe takes preference but will fallback to mediainfo if no packages are detected. This can be overriden by CLI args.
+* `type`: (`tv` or `movie`) Aet the archive media type globally.
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
 * `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the Resolution/Video/Audio columns).
-  **Note**: This is turned off by default, because it can dramatically increase processing time.
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.
 * `tv_columns`: TV archive columns to render, and their order.
@@ -128,7 +136,7 @@ All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}` (case-insensitiv
 
 # Multiple audio/video streams
 
-If the script falls-back to probing the viedo file:
+If the script falls-back to probing the video file:
 
 * If there is only one stream, it will list only the codec, as if it were in the filename, eg:
 
@@ -158,15 +166,17 @@ Expected output:
 ```bash
 $ ./test.sh 
 .env does not exist, generating the default .env...
-Checking ./ffprobe.sh
-OK
 Checking ./archive_list.sh
 OK
+Checking ./includes/ffprobe.sh
+OK
+Checking ./includes/functions.sh
+OK
+Checking ./includes/mediainfo.sh
+OK
+Checking ./includes/progressbar.sh
+OK
 Checking ./test.sh
-OK
-Checking ./mediainfo.sh
-OK
-Checking ./progressbar.sh
 OK
 ```
 
@@ -210,6 +220,7 @@ Awesome online aplications used in development and testing:
 Technical experts:
 
 * Progressbar inspiration: https://github.com/albertomosconi/posixbar
+* Parse command line options for a shell script (POSIX): https://gist.github.com/deshion/10d3cb5f88a21671e17a
 * Pseudo arrays: https://gist.github.com/biiont/290341b29657c0bb2df6
 * Padding a string: https://stackoverflow.com/a/74964817
 * Validation of dependencies: https://stackoverflow.com/questions/592620/how-can-i-check-if-a-program-exists-from-a-bash-script

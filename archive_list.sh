@@ -2,7 +2,8 @@
 
 saveifs=${IFS}
 
-. ./progressbar.sh || exit 1
+. ./includes/progressbar.sh || exit 1
+. ./includes/functions.sh || exit 1
 command -v jq >/dev/null 2>&1 || { echo >&2 "I require jq but it's not installed."; exit 1; }
 
 # Import .env vars
@@ -14,12 +15,86 @@ set -a
 . ./.env
 set +a
 
+# Reset all variables that might be set
+[ -z "$scanner" ] && scanner=''
+columns=''
+
+while :; do
+    case $1 in
+        -h|-\?|--help) 
+            show_help
+            exit 0
+            ;;
+        -s|--scanner)       # Takes an option argument, ensuring it has been specified.
+            if [ -n "$2" ]; then
+                scanner=$2
+                shift
+            else
+                printf 'ERROR: "--scanner" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+        --scanner=?*)
+            scanner=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        --scanner=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--scanner" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        -t|--type)       # Takes an option argument, ensuring it has been specified.
+            if [ -n "$2" ]; then
+                [ "$2" = "tv" ] && columns="$tv_columns"
+                [ "$2" = "movie" ] && columns="$movie_columns"
+                if [ -z "$columns" ]; then
+                    echo "Invalid archive type: $2"
+                    echo "Usage: $(basename "$0") -t [tv,movie]"
+                    exit 1
+                fi
+                shift
+            else
+                printf 'ERROR: "--file" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+        --type=?*)
+            type=${1#*=} # Delete everything up to "=" and assign the remainder.
+            [ "$type" = "tv" ] && columns="$tv_columns"
+            [ "$type" = "movie" ] && columns="$movie_columns"
+            if [ -z "$columns" ]; then
+                echo "Invalid archive type: $2"
+                echo "Usage: $(basename "$0") -t [tv,movie]"
+                exit 1
+            fi
+            ;;
+        --type=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--type" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        --)              # End of all options.
+            shift
+            break
+            ;;
+        -?*)
+            printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
+            ;;
+        *)               # Default case: If no more options then break out of the loop.
+            break
+    esac
+
+    shift
+done
+
+dir="$1"
+
+if [ -z "$dir" ]; then
+    echo 'source directory not defined.'
+    echo "Usage: $(basename "$0") /path/to/media/"
+    exit 1
+fi
+
 # Set the scanner
 if test -n "$scanner" && { test "$scanner" = 'ffprobe' || test "$scanner" = 'mediainfo'; }; then
-    command -v "$scanner" >/dev/null 2>&1 || { echo "$scanner is specified in the config, but it's not installed." >&2; exit 0; }
-elif test -n "$scanner" && test "$scanner" != 'auto'; then
-    echo "Invalid scanner config: '$scanner'. See the README." 2>&1
-    exit 0
+    command -v "$scanner" >/dev/null 2>&1 || { echo "Scanner is set to '$scanner', but it's not installed." >&2; exit 1; }
 else
     if command -v ffprobe >/dev/null 2>&1; then
         scanner="ffprobe"
@@ -28,28 +103,27 @@ else
             scanner="mediainfo"
         else
             echo "I need at least one scanner, but none found. See the README."
-            exit 0
+            exit 1
         fi
     fi
 fi
 printf "setting scanner to %s\n\n" "$scanner" 1>&2
-# shellcheck source=ffprobe.sh
-. "./${scanner}.sh" || exit 1
+# shellcheck source=includes/ffprobe.sh
+. "./includes/${scanner}.sh" || exit 1
 
-extensions='m2ts|webm|mkv|flv|vob|ogv|ogg|rrc|gifv|mng|mov|avi|qt|wmv|yuv|asf|amv|mp4|m4p|m4v|mpg|mp2|mpeg|mpe|mpv|m4v|svi|3gp|3g2|mxf|roq|nsv|flv|f4v|f4p|f4a|f4b|mod'
-dir=$1
 
 # Create a regex of the extensions for the find command
+extensions='m2ts|webm|mkv|flv|vob|ogv|ogg|rrc|gifv|mng|mov|avi|qt|wmv|yuv|asf|amv|mp4|m4p|m4v|mpg|mp2|mpeg|mpe|mpv|m4v|svi|3gp|3g2|mxf|roq|nsv|flv|f4v|f4p|f4a|f4b|mod'
 extensions_re="\\($(echo "$extensions" | sed -r 's/\|/\\\|/g')\\)"
 
-columns=''
 filenames_file="$(mktemp)"
-metadata=''
 find "$dir" -type f -regex ".*\.$extensions_re" 2>&1 > "$filenames_file" | grep -v 'Permission denied' >&2
 files_total=$(grep -c . "$filenames_file")
 processing_file=0
 while IFS= read -r filepath; do
     line=''
+    title=''
+    series=''
     episode=''
     season=''
     size=0
@@ -58,6 +132,9 @@ while IFS= read -r filepath; do
     processing_file=$((processing_file + 1))
     progressbar "$processing_file" "$files_total" "$filename" >&2
     spaced_filename=$(echo "$filename" | sed 's/\./\ /g')
+    # spaced_filename=$(trim_extension "$spaced_filename")
+    extra_season=$(get_extra_season "$spaced_filename" "$filepath")
+    [ -z "$extra_season" ] && extra_all=$(get_extra_all "$spaced_filename" "$filepath") || extra_all=''
     # Detect if dir contains movies or TV shows
     if [ -z "$columns" ]; then
         echo "$spaced_filename" | grep -Piq ' s\d{2}e\d{2} ' && columns="$tv_columns" || columns="$movie_columns"
@@ -69,35 +146,69 @@ while IFS= read -r filepath; do
         field=''
         case "$column" in
             'Title')
-                # Title with date in brackets
-                field=$(echo "$spaced_filename" | grep -ioP '.*?(?= \(\d{4}\) )')
-                # Title with date
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -ioP '.*?(?= \d{4} )')
+                title=$(get_title "$spaced_filename")
+                directory=$(get_directory "$filepath")
+                extras_suffix=$(get_extra_suffix "$spaced_filename")
+                if [ "$(get_extra_special "$title")" ]; then
+                    # Jellyfin extras special filename
+                    if (get_extra_dir "$directory"); then
+                        # Edge case of extras special filename in an extras directory 
+                        parent_directory=$(get_directory "$filepath")
+                        parent_directory=$(get_title "$parent_directory ")
+                        title="$parent_directory - $directory - $title"
+                    else
+                        directory=$(get_title "$directory")
+                        title="$directory - $title"
+                    fi
+                elif [ -n "$(get_extra_dir "$directory")" ]; then
+                    # Jellyfin/plex/kodi extras directory
+                    parent_directory=$(get_parent_directory "$filepath")
+                    parent_directory=$(get_title "$parent_directory ")
+                    title="$parent_directory - $directory - $title"
+                elif test -n "$extras_suffix"; then
+                    # Jellyfin/plex extras filename suffix
+                    title=$(title "$directory")" - $extras_suffix"
+                fi
+                field="$title"
                 ;;
             'Series')
-                test -z "$season" && season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
-                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
-                if test "$display_series_for_1" -eq 0 || { test "$season" -eq 1 && test "$episode" -eq 1; }; then
-                    field=$(echo "$spaced_filename" | grep -ioP '.*?(?= s\d{2}e\d{2} )')
+                [ -z "$series" ] && series=$(get_series "$extra_season" "$extra_all" "$spaced_filename" "$filepath")
+                [ -z "$season" ] && season=$(get_season "$extra_all" "$spaced_filename" "$filepath")
+                [ -z "$episode" ] && episode=$(get_episode "$extra_season" "$extra_all" "$spaced_filename")
+                if test "$display_series_for_1" -eq 0 || { test "$season" = "01" && test "$episode" = "01"; }; then
+                    field="$series"
                 fi
                 ;;
             'Season')
-                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
-                if test "$display_season_for_1" -eq 0 || test "$episode" -eq 1; then
-                    test -z "$season" && season=$(echo "$spaced_filename" | sed -r 's/^.*s([0-9]{2})e[0-9]{2}.*$/\1/I')
+                [ -z "$series" ] && series=$(get_series "$extra_season" "$extra_all" "$spaced_filename" "$filepath")
+                [ -z "$season" ] && season=$(get_season "$extra_all" "$spaced_filename" "$filepath")
+                [ -z "$episode" ] && episode=$(get_episode "$extra_season" "$extra_all" "$spaced_filename")
+                    # Jellyfin extras in directory Season 00
+                # [ "$season" = '00' ] && season='extra'
+                if [ "$display_season_for_1" -eq 0 ] || [ "$episode" = '01' ] || [ "$season" = 'extra' ]; then
                     field="$season"
                 fi
                 ;;
             'Episode')
-                test -z "$episode" && episode=$(echo "$spaced_filename" | sed -r 's/^.*s[0-9]{2}e([0-9]{2}).*$/\1/I')
+                [ -z "$episode" ] && episode=$(get_episode "$extra_season" "$extra_all" "$spaced_filename")
                 field="$episode"
                 ;;
             'Year')
-                # Year with brackets
-                field=$(echo "$spaced_filename" | grep -ioP ' \(\d{4}\) ')
-                # Year without brackets
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -ioP ' \d{4} ')
-                field=$(echo "$field"  | grep -ioP '\d{4}')
+                year=$(get_year "$spaced_filename")
+                # no year from filename, test parent directories
+                if [ -z "$year" ]; then
+                    directory=$(get_directory "$filepath")
+                    year=$(get_year "$directory")
+                fi
+                if [ -z "$year" ]; then
+                    directory=$(get_parent_directory "$filepath")
+                    year=$(get_year "$directory")
+                fi
+                if [ -z "$year" ]; then
+                    directory=$(get_grandparent_directory "$filepath")
+                    year=$(get_year "$directory")
+                fi
+                field="$year"
                 ;;
             'Resolution')
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
@@ -107,16 +218,14 @@ while IFS= read -r filepath; do
                 fi
                 ;;
             'Edition')
-                # Strip the file extension
-                part_filename=$(echo "$spaced_filename" | sed -r 's/\ [0-9a-z]*$//I')
                 # Edition in curly brackets (Plex)
-                field=$(echo "$part_filename" | sed -nr 's/.*\{edition-(.*)\}.*/\1/p')
+                field=$(echo "$spaced_filename" | sed -nr 's/.*\{edition-(.*)\}.*/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Edition after date in brackets and hyphen (jellyin & kodi)
-                [ -z "$field" ] && field=$(echo "$part_filename" | sed -nr 's/.*\([0-9]{4}\)\ -\ (.*)/\1/p')
+                [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -nr 's/.*\([0-9]{4}\)\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Edition after date in brackets, tmdbid/imdbid in square brackets and hyphen (jellyin)
-                [ -z "$field" ] && field=$(echo "$part_filename" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p')
+                [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Fallback
-                [ -z "$field" ] && field=$(echo "$part_filename" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | tr '\n' ' ' | sed 's/^\ //' | sed 's/\ $//')
+                [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | tr '\n' ' ' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
                 ;;
             'Video')
                 codec=''
@@ -298,7 +407,22 @@ while IFS= read -r filepath; do
         fi
     done
     unset column col_arr
-    output="${output}${line};"
+    sort_col=''
+    if [ -n "$title" ]; then
+        sort_col="$title"
+        [ -n "$extra_all" ] && sort_col="$sort_col $extra_all"
+    elif [ -n "$series" ]; then
+        sort_col="$series"
+        if [ -n "$extra_all" ]; then
+            sort_col="$sort_col extra"
+        elif [ -n "$season" ]; then
+            sort_col="$sort_col $season"
+        fi
+        if [ -n "$episode" ]; then
+            sort_col="$sort_col $episode"
+        fi
+    fi
+    output="${output}${line},\"$sort_col\";"
 done < "$filenames_file"
 rm "$filenames_file"
 
@@ -314,7 +438,7 @@ while [ -n "$col_arr" ]; do
     fi
     col_arr=${col_arr#*|}
 done
-output="$line;$output"
+output="$line,\"Sort\";$output"
 
 # Generate disk usage stats
 disk_usage=$(df -Ph "$dir" | tail -n 1)
