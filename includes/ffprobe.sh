@@ -85,9 +85,10 @@ video() {
         _additional_info=''
         # Extract field values for a stream
         _id=$(echo "$_video_stream" | sed 's/.*"ID":\([0-9]*\),.*/\1/')
-        _color_transfer=$(echo "$_video_stream" | sed 's/.*"color_transfer":"\([^}]*\)".*/\1/')
-        _codec=$(echo "$_video_stream" | sed 's/.*"codec_long_name":"\([^}]*\)".*/\1/')
+        _color_transfer=$(echo "$_video_stream" | sed -n 's/.*"color_transfer":"\([^"]*\)".*/\1/p')
+        _codec=$(echo "$_video_stream" | sed -n 's/.*"codec_long_name":"\([^"]*\)".*/\1/p')
         test "${_codec#*"/ AVC /"}" != "$_codec" && _codec='AVC'
+        test "${_codec#*"PNG"}" != "$_codec" && _codec='PNG'
         test "${_codec#*"HEVC"}" != "$_codec" && _codec='HEVC'
         test "${_codec#*"VC-1"}" != "$_codec" && _codec='VC-1'
         test "${_codec#*"MPEG-2"}" != "$_codec" && _codec='MPEG-2'
