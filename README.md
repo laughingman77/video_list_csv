@@ -4,23 +4,21 @@
 
 This script recursively scans a directory and creates a CSV with details of all Movie and TV media in that directory and sub-directories. This is aimed towards Home Theatre enthusiasts and their archives. However it can be used for any directories containing video media.
 
-The script scans using `ffprobe` or `mediainfo` to scan the library, as automatic detection, as a CLI argument or globally in the `.env` file.
+The script uses `ffprobe` or `mediainfo` to scan the library. It can automatically detect what library are present, or you can define what package you want to use as a CLI argument or globally in the `.env` file.
 
 This is a POSIX compliant bash script. It will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]) (untested).
 
-The script assumes that you have separate archives for TV and movies, and automatically detects what kind of archive it is scanning and renders the appropriate archive list. You can also define what kinf of list you want as a CLI argument or globally in the `.env` file.
+The script assumes that you have separate archives for TV and movies and automatically detects what kind of archive it is scanning and renders the appropriate archive list. You can also define what kind of list you want as a CLI argument or globally in the `.env` file.
 
-You can define what columns you want to render and the order in the settings file. An extra `Sort` column is automatically added to the end of the columns, to allow proper sorting (no other columns are 100% reliable).
+You can define what columns you want in the CSV and the order in the settings file. An extra `Sort` column is automatically added to the end of the columns, to allow proper sorting (no other columns are 100% reliable).
 
-The resultant CVS also contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after other files in the archive are taken into account.
+The resultant CVS contains summary data of `Disk Size`, `Disk Space used` and `Disk Space free`. This allows you to see free disk space after other files in the archive are taken into account.
 
 **Note:** The scan will be fastest if you have the media info in the filename.
 
 **Note:**  The automatic detection is based on the format of the first video filename that the script parses. If you have extras in your archive, you may want to specify the archive type as a CLI option: `-t {tv,movie}`.
 
 **Note:** `ffprobe` is much faster than `mediainfo`, however it cannot fetch `HDR10` or `HDR10+` definitions at the present.
-
-**Note:** After quite some pain, trying to understand why `ffprobe` was not displaying any `Atmos` or `DV` data, I discovered that `Ubuntu 22.04` (one of my  dev machines) has only `ffmpeg v4` in the official repositories (WHAT? Yes, you heard me correctly). The take away from is that although this script will work with the legacy versions of `ffprobe` or `mediainfo`, for best results ensure that you have the latest versions installed. You may need to use an unofficial repo, such as [ubuntuhandbook1/ffmpeg6][ffmpeg-6].
 
 ## Disclaimer
 
@@ -30,21 +28,17 @@ This script is intended for people who want to maintain an archive of legitmatel
 
 ## Requirements
 
-### To use `ffprobe` (default scanner)
+* `git`
+* `jq`
+* `ffprobe` or `mediainfo`
 
-* git
-* jq
-* ffprobe
+### To use `ffprobe` (default scanner)
 
 ```bash
 sudo apt install git jq ffprobe
 ```
 
 ### To use `mediainfo`
-
-* git
-* jq
-* mediainfo
 
 ```bash
 sudo apt install git jq mediainfo
@@ -67,7 +61,7 @@ cd video_list_csv && cp example.env .env
 # Usage
 
 1. Copy the `Movie Archive` spreadsheet into your home directory.
-1. In your new spreadsheet, duplicate the `Archive Template` sheet for your archive disk, and give it a meaningful name.
+1. In your spreadsheet clone, duplicate the `Archive Template` sheet, and give it a meaningful name.
 1. Run the script:
     ```bash
     sh archive_list.sh /path/to/archive/dir/ > ~/archive.csv
@@ -78,7 +72,8 @@ cd video_list_csv && cp example.env .env
     ```
 1. Import `archive.csv` into your spreadseet program.
 1. Copy the cells from the imported CSV data and paste it into your archive sheet at cell `A4`.
-1. Sort the individual archive file rows as you wish, for readability.
+1. Select the cells for the media data and sort by the `Sort` column.
+1. Format the sheet to your preference.
 
 ## CLI Options
 
@@ -88,10 +83,10 @@ cd video_list_csv && cp example.env .env
 
 # .env options
 
-* `scanner`: (`ffprobe`, `mediainfo`) Select the preferred scanning program globally. If not set, then ffprobe takes preference but will fallback to mediainfo if no packages are detected. This can be overriden by CLI args.
-* `type`: (`tv` or `movie`) Aet the archive media type globally.
+* `scanner`: (`ffprobe`, `mediainfo`) Select the preferred scanning program globally. If not set, then ffprobe takes preference but will fallback to mediainfo if it's not deteced detected. This can be overriden by CLI args.
+* `type`: (`tv` or `movie`) Set the archive media type globally.
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
-* `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the Resolution/Video/Audio columns).
+* `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the `Resolution`/`Video`/`Audio` columns).
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.
 * `tv_columns`: TV archive columns to render, and their order.
@@ -139,16 +134,13 @@ All TV episodes should be in the format of `S[0-9]{2}E[0-9]{2}` (case-insensitiv
 If the script falls-back to probing the video file:
 
 * If there is only one stream, it will list only the codec, as if it were in the filename, eg:
-
-```
-"AVC DV HDR10+"
-```
-
+    ```
+    "AVC DV HDR10+"
+    ```
 * If there are multiple streams, it will list each stream number and its codec in a comma separated list, eg:
-
-```
-"stream_1: DTS 5.1, stream_2: AC3 2.0"
-```
+    ```
+    "stream_1: DTS 5.1, stream_2: AC3 2.0"
+    ```
 
 # Testing
 
