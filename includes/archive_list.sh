@@ -2,9 +2,9 @@
 
 saveifs=${IFS}
 
-# shellcheck source=./progressbar.sh
+# shellcheck disable=SC1091
 . ./includes/progressbar.sh || exit 1
-# shellcheck source=./functions.sh
+# shellcheck disable=SC1091
 . ./includes/functions.sh || exit 1
 command -v jq >/dev/null 2>&1 || { echo >&2 "I require jq but it's not installed."; exit 1; }
 
@@ -14,7 +14,7 @@ if [ ! -e .env ]; then
     exit 1
 fi
 set -a
-# shellcheck source=../.env
+# shellcheck disable=SC1091
 . ./.env
 set +a
 
@@ -111,7 +111,8 @@ else
     fi
 fi
 printf "setting scanner to %s\n\n" "$scanner" 1>&2
-# shellcheck source=./ffprobe.sh
+# shellcheck source=includes/ffprobe.sh
+# shellcheck disable=SC1091
 . "./includes/${scanner}.sh" || exit 1
 
 
