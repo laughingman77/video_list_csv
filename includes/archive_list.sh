@@ -2,7 +2,9 @@
 
 saveifs=${IFS}
 
+# shellcheck source=./progressbar.sh
 . ./includes/progressbar.sh || exit 1
+# shellcheck source=./functions.sh
 . ./includes/functions.sh || exit 1
 command -v jq >/dev/null 2>&1 || { echo >&2 "I require jq but it's not installed."; exit 1; }
 
@@ -12,6 +14,7 @@ if [ ! -e .env ]; then
     exit 1
 fi
 set -a
+# shellcheck source=../.env
 . ./.env
 set +a
 
@@ -108,7 +111,7 @@ else
     fi
 fi
 printf "setting scanner to %s\n\n" "$scanner" 1>&2
-# shellcheck source=includes/ffprobe.sh
+# shellcheck source=./ffprobe.sh
 . "./includes/${scanner}.sh" || exit 1
 
 
@@ -132,7 +135,6 @@ while IFS= read -r filepath; do
     processing_file=$((processing_file + 1))
     progressbar "$processing_file" "$files_total" "$filename" >&2
     spaced_filename=$(echo "$filename" | sed 's/\./\ /g')
-    # spaced_filename=$(trim_extension "$spaced_filename")
     extra_season=$(get_extra_season "$spaced_filename" "$filepath")
     [ -z "$extra_season" ] && extra_all=$(get_extra_all "$spaced_filename" "$filepath") || extra_all=''
     # Detect if dir contains movies or TV shows
@@ -183,8 +185,6 @@ while IFS= read -r filepath; do
                 [ -z "$series" ] && series=$(get_series "$extra_season" "$extra_all" "$spaced_filename" "$filepath")
                 [ -z "$season" ] && season=$(get_season "$extra_all" "$spaced_filename" "$filepath")
                 [ -z "$episode" ] && episode=$(get_episode "$extra_season" "$extra_all" "$spaced_filename")
-                    # Jellyfin extras in directory Season 00
-                # [ "$season" = '00' ] && season='extra'
                 if [ "$display_season_for_1" -eq 0 ] || [ "$episode" = '01' ] || [ "$season" = 'extra' ]; then
                     field="$season"
                 fi
