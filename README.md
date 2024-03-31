@@ -64,11 +64,11 @@ cd video_list_csv && cp example.env .env
 1. In your spreadsheet clone, duplicate the `Archive Template` sheet, and give it a meaningful name.
 1. Run the script:
     ```bash
-    sh archive_list.sh /path/to/archive/dir/ > ~/archive.csv
+    sh video_list_csv.sh /path/to/archive/dir/ > ~/archive.csv
     ```
     Or
     ```bash
-    ./archive_list.sh /path/to/archive/dir/ > ~/archive.csv
+    ./video_list_csv.sh /path/to/archive/dir/ > ~/archive.csv
     ```
 1. Import `archive.csv` into your spreadseet program.
 1. Copy the cells from the imported CSV data and paste it into your archive sheet at cell `A4`.
@@ -172,9 +172,13 @@ Checking ./includes/ffprobe.sh
 OK
 Checking ./includes/functions.sh
 OK
+Checking ./includes/archive_list.sh
+OK
 Checking ./includes/mediainfo.sh
 OK
 Checking ./includes/progressbar.sh
+OK
+Checking ./video_list_csv.sh
 OK
 Checking ./test.sh
 OK
