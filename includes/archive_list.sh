@@ -24,9 +24,137 @@ columns=''
 
 while :; do
     case $1 in
-        -h|-\?|--help) 
+        -h|-\?|--help)
             show_help
             exit 0
+            ;;
+        -f|--force)
+            if [ -n "$2" ]; then
+                force_detect=$2
+                shift
+            else
+                printf 'ERROR: "--force" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$force_detect" != '0' ] && [ "$force_detect" != '1' ]; then
+                printf 'ERROR: "--force" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --force=?*)
+            force_detect=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$force_detect" != '0' ] && [ "$force_detect" != '1' ]; then
+                printf 'ERROR: "--force" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --force=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--force" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        -d|--detect)
+            if [ -n "$2" ]; then
+                detect_if_not_in_filename=$2
+                shift
+            else
+                printf 'ERROR: "--detect" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$detect_if_not_in_filename" != '0' ] && [ "$detect_if_not_in_filename" != '1' ]; then
+                printf 'ERROR: "--detect" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --detect=?*)
+            detect_if_not_in_filename=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$detect_if_not_in_filename" != '0' ] && [ "$detect_if_not_in_filename" != '1' ]; then
+                printf 'ERROR: "--detect" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --detect=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--detect" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        -e|--season)
+            if [ -n "$2" ]; then
+                display_season_for_1=$2
+                shift
+            else
+                printf 'ERROR: "--season" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$display_season_for_1" != '0' ] && [ "$display_season_for_1" != '1' ]; then
+                printf 'ERROR: "--season" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --season=?*)
+            display_season_for_1=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$display_season_for_1" != '0' ] && [ "$display_season_for_1" != '1' ]; then
+                printf 'ERROR: "--season" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --season=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--season" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        -r|--series)
+            if [ -n "$2" ]; then
+                display_series_for_1=$2
+                shift
+            else
+                printf 'ERROR: "--series" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$display_series_for_1" != '0' ] && [ "$display_series_for_1" != '1' ]; then
+                printf 'ERROR: "--series" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --series=?*)
+            display_series_for_1=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$display_series_for_1" != '0' ] && [ "$display_series_for_1" != '1' ]; then
+                printf 'ERROR: "--series" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --series=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--series" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        -x|--movie_columns)
+            if [ -n "$2" ]; then
+                movie_columns=$2
+                shift
+            else
+                printf 'ERROR: "--movie_columns" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+        --movie_columns=?*)
+            movie_columns=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        --movie_columns=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--movie_columns" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        -z|--tv_columns)
+            if [ -n "$2" ]; then
+                tv_columns=$2
+                shift
+            else
+                printf 'ERROR: "--tv_columns" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            ;;
+        --tv_columns=?*)
+            tv_columns=${1#*=} # Delete everything up to "=" and assign the remainder.
+            ;;
+        --tv_columns=)         # Handle the case of an empty --file=
+            printf 'ERROR: "--tv_columns" requires a non-empty option argument.\n' >&2
+            exit 1
             ;;
         -s|--scanner)       # Takes an option argument, ensuring it has been specified.
             if [ -n "$2" ]; then
@@ -88,8 +216,7 @@ while :; do
 done
 
 dir="$1"
-
-if [ -z "$dir" ]; then
+if [ ! -d "$dir" ]; then
     echo 'source directory not defined.'
     echo "Usage: $(basename "$0") /path/to/media/"
     exit 1

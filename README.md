@@ -77,9 +77,17 @@ cd video_list_csv && cp example.env .env
 
 ## CLI Options
 
+CLI options allow you to override the values in `.env`:
+
 * `-h, -?, --help` Display the help text.
 * `-s, --scanner` Set the scanner program (`ffprobe` or `mediainfo`).
 * `-t, --type` Set the archive type (`tv` or `movie`).
+* `-f, --force` Force detect the media metadata from the file (0 or 1).
+* `-d, --detect` Detect the media metadata if not in the filename (0 or 1).
+* `-e, --season` Display season only when episodes #1 (0 or 1).
+* `-r, --series` Display series only when season #1 and episode #1 (0 or 1).
+* `-x, --movie_columns` Define the Movie columns.
+* `-z, --tv_columns` Define the TV columns.
 
 # .env options
 

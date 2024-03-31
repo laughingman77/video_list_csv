@@ -2,22 +2,44 @@
 
 # Display the help text.
 show_help() {
-    echo 'archive_list'
+    echo 'video_list_csv'
     echo 'Generate a CSV file of video media within a directory'
     echo
-    echo 'Usage: "./archive_list.sh [-Options...] DirName1"'
+    echo 'Usage: "./video_list_csv.sh [-Options...] DirPath"'
     echo
     echo 'Options:'
     echo '--help, -h, -?'
     echo '      Display this help and exit'
     echo '--scanner, -s'
     echo '      [ffrpobe,mediainfo] set media scanner program'
+    echo '      Overrides "scanner"'
     echo '--type, -t'
     echo '      [tv,movie] set the archive type'
+    echo '      Overrides "type"'
+    echo '--force, -f'
+    echo '      [0,1] Force detect the media metadata from the file'
+    echo '      Overrides "force_detect"'
+    echo '--detect, -d'
+    echo '      [0,1] Detect the media metadata if not in the filename'
+    echo '      Overrides "detect_if_not_in_filename"'
+    echo '--season, -e'
+    echo '      [0,1] Display season only for episodes #1'
+    echo '      Overrides "display_season_for_1"'
+    echo '--series, -r'
+    echo '      [0,1] Display series only for season #1 and episode #1'
+    echo '      Overrides "display_series_for_1"'
+    echo '--movie_columns, -x'
+    echo '      Define the Movie columns'
+    echo '      Overrides "movie_columns"'
+    echo '--tv_columns, -z'
+    echo '      Define the TV columns'
+    echo '      Overrides "tv_columns"'
     echo
     echo 'Examples:'
-    echo '      ./archive_list --scanner=mediaiinfo --type=tv' /dir/movies/'
-    echo '      ./archive_list -s ffprobe -t movie' /dir/movies/'
+    echo '      ./video_list_csv.sh --scanner=mediainfo --type=tv /dir/archive_1/'
+    echo '      ./video_list_csv.sh -s ffprobe -t movie /dir/archive_1/'
+    echo '      ./video_list_csv.sh -x "Title|Year|Filename" /dir/archive_1/'
+    echo '      ./video_list_csv.sh -f 1 /dir/archive_1/'
 }
 
 # Extract the directory from a filepath
