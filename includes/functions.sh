@@ -105,11 +105,10 @@ get_season_from_filename() {
 }
 
 # Extract the extras special (Jellyfin)
-# @param $1 _spaced_filename Filename with '.' replaced by ' '
+# @param $1 _spaced_filename Filename with '.' replaced by ' ' and trimmed of extension
 # @returns string|empty
 get_extra_special() {
     _spaced_filename="$1"
-    _spaced_filename=$(trim_extension "$_spaced_filename")
     echo "$_spaced_filename" | grep -io '^sample$\|^trailer$\|^theme$'
 }
 

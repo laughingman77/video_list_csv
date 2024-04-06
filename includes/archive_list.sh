@@ -48,7 +48,7 @@ while :; do
                 exit 1
             fi
             ;;
-        --force=)         # Handle the case of an empty --file=
+        --force=) # Handle the case of an empty --file=
             printf 'ERROR: "--force" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
@@ -72,7 +72,7 @@ while :; do
                 exit 1
             fi
             ;;
-        --detect=)         # Handle the case of an empty --file=
+        --detect=) # Handle the case of an empty --file=
             printf 'ERROR: "--detect" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
@@ -96,7 +96,7 @@ while :; do
                 exit 1
             fi
             ;;
-        --season=)         # Handle the case of an empty --file=
+        --season=) # Handle the case of an empty --file=
             printf 'ERROR: "--season" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
@@ -120,7 +120,7 @@ while :; do
                 exit 1
             fi
             ;;
-        --series=)         # Handle the case of an empty --file=
+        --series=) # Handle the case of an empty --file=
             printf 'ERROR: "--series" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
@@ -136,7 +136,7 @@ while :; do
         --movie_columns=?*)
             movie_columns=${1#*=} # Delete everything up to "=" and assign the remainder.
             ;;
-        --movie_columns=)         # Handle the case of an empty --file=
+        --movie_columns=) # Handle the case of an empty --file=
             printf 'ERROR: "--movie_columns" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
@@ -152,11 +152,11 @@ while :; do
         --tv_columns=?*)
             tv_columns=${1#*=} # Delete everything up to "=" and assign the remainder.
             ;;
-        --tv_columns=)         # Handle the case of an empty --file=
+        --tv_columns=) # Handle the case of an empty --file=
             printf 'ERROR: "--tv_columns" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
-        -s|--scanner)       # Takes an option argument, ensuring it has been specified.
+        -s|--scanner) # Takes an option argument, ensuring it has been specified.
             if [ -n "$2" ]; then
                 scanner=$2
                 shift
@@ -168,11 +168,11 @@ while :; do
         --scanner=?*)
             scanner=${1#*=} # Delete everything up to "=" and assign the remainder.
             ;;
-        --scanner=)         # Handle the case of an empty --file=
+        --scanner=) # Handle the case of an empty --file=
             printf 'ERROR: "--scanner" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
-        -t|--type)       # Takes an option argument, ensuring it has been specified.
+        -t|--type) # Takes an option argument, ensuring it has been specified.
             if [ -n "$2" ]; then
                 [ "$2" = "tv" ] && columns="$tv_columns"
                 [ "$2" = "movie" ] && columns="$movie_columns"
@@ -197,18 +197,18 @@ while :; do
                 exit 1
             fi
             ;;
-        --type=)         # Handle the case of an empty --file=
+        --type=) # Handle the case of an empty --file=
             printf 'ERROR: "--type" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
-        --)              # End of all options.
+        --) # End of all options.
             shift
             break
             ;;
         -?*)
             printf 'WARN: Unknown option (ignored): %s\n' "$1" >&2
             ;;
-        *)               # Default case: If no more options then break out of the loop.
+        *) # Default case: If no more options then break out of the loop.
             break
     esac
 
@@ -281,7 +281,7 @@ while IFS= read -r filepath; do
                 extras_suffix=$(get_extra_suffix "$spaced_filename")
                 if [ "$(get_extra_special "$title")" ]; then
                     # Jellyfin extras special filename
-                    if (get_extra_dir "$directory"); then
+                    if [ "$(get_extra_dir "$directory")" ]; then
                         # Edge case of extras special filename in an extras directory 
                         parent_directory=$(get_directory "$filepath")
                         parent_directory=$(get_title "$parent_directory ")
