@@ -216,7 +216,8 @@ while :; do
 done
 
 dir="$1"
-if [ ! -d "$dir" ]; then
+
+if [ ! -d "$dir" ] && [ ! -f "$dir" ]; then
     echo 'source directory not defined.'
     echo "Usage: $(basename "$0") /path/to/media/"
     exit 1
@@ -353,7 +354,7 @@ while IFS= read -r filepath; do
                 # Edition after date in brackets, tmdbid/imdbid in square brackets and hyphen (jellyin)
                 [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Fallback
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | tr '\n' ' ' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
+                [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut|remux)' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
                 ;;
             'Video')
                 codec=''
