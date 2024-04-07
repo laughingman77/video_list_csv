@@ -348,13 +348,14 @@ while IFS= read -r filepath; do
                 ;;
             'Edition')
                 # Edition in curly brackets (Plex)
-                field=$(echo "$spaced_filename" | sed -nr 's/.*\{edition-(.*)\}.*/\1/p' | tr '[:upper:]' '[:lower:]')
+                trimmed=$(trim_extension "$spaced_filename")
+                field=$(echo "$trimmed" | sed -nr 's/.*\{edition-(.*)\}.*/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Edition after date in brackets and hyphen (jellyin & kodi)
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -nr 's/.*\([0-9]{4}\)\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
+                [ -z "$field" ] && field=$(echo "$trimmed" | sed -nr 's/.*\([0-9]{4}\)\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Edition after date in brackets, tmdbid/imdbid in square brackets and hyphen (jellyin)
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
+                [ -z "$field" ] && field=$(echo "$trimmed" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Fallback
-                [ -z "$field" ] && field=$(echo "$spaced_filename" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut|remux)' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
+                [ -z "$field" ] && field=$(echo "$trimmed" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
                 ;;
             'Video')
                 codec=''
