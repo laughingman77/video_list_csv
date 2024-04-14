@@ -120,7 +120,7 @@ The possible columns are:
 * `Year`: Relese date
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
 * `Video`: The video codec and colouration streams, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
-* `Audio`: The audio codec and channel layout
+* `Audio`: The audio codec, channel layout and language
 * `Subtitles`: (**not in the default configuration**) The list of subtitle srteam/s.s
 * `Release Type`: (**not in the default configuration**) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
@@ -147,11 +147,11 @@ If the script falls-back to probing the video file:
 
 * If there is only one stream, it will list only the codec, as if it were in the filename, eg:
     ```
-    "AVC DV HDR10+"
+    "AVC DV HDR10+ (en)"
     ```
 * If there are multiple streams, it will list each stream number and its codec in a comma separated list, eg:
     ```
-    "stream_1: DTS 5.1, stream_2: AC3 2.0"
+    "stream_1: DTS 5.1 (en), stream_2: AC3 2.0 (za)"
     ```
 
 # Testing
