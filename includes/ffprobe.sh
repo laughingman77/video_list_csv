@@ -122,7 +122,7 @@ video() {
 #   foobar=$(audio "$metadata")
 audio() {
     _metadata=$1
-    _audio_streams=$(echo "$_metadata" | jq -c '.streams[] | select(.codec_type == "audio") | { ID: .index, profile: .profile, codec_long_name: .codec_long_name, channel_layout: .channel_layout, channels: .channels}')
+    _audio_streams=$(echo "$_metadata" | jq -c '.streams[] | select(.codec_type == "audio") | { ID: .index, profile: .profile, codec_long_name: .codec_long_name, channel_layout: .channel_layout, channels: .channels, language: .tags.language}')
     _linecount=$(echo "$_audio_streams" | wc -l)
     _result=''
     IFS='
@@ -132,6 +132,7 @@ audio() {
         _id=$(echo "$_audio_stream" | sed 's/.*"ID":\([0-9]*\).*/\1/')
         _profile=$(echo "$_audio_stream" | sed -n 's/.*"profile":"\([^"]*\)".*/\1/p')
         _codec_long_name=$(echo "$_audio_stream" | sed -n 's/.*"codec_long_name":"\([^"]*\)".*/\1/p')
+        _language=$(echo "$_audio_stream" | sed -n 's/.*"language":"\([^"]*\)".*/\1/p')
         test -n "$_profile" && _codec="$_profile" || _codec="$_codec_long_name"
         test "${_codec#*"PCM"}" != "$_codec" && _codec='PCM'
         test "${_codec#*"Atmos"}" != "$_codec" && _codec='Atmos'
@@ -157,7 +158,7 @@ audio() {
         fi
         # Concatenate the stream info parts into the field
         test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
-        _result="${_result}${_codec} ${_channel_layout}, "
+        _result="${_result}${_codec} ${_channel_layout} (${_language}), "
     done
     # Strip trailing characters and bad spaces
     _result=$(echo "$_result" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')

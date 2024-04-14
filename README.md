@@ -64,11 +64,11 @@ cd video_list_csv && cp example.env .env
 1. In your spreadsheet clone, duplicate the `Archive Template` sheet, and give it a meaningful name.
 1. Run the script:
     ```bash
-    sh archive_list.sh /path/to/archive/dir/ > ~/archive.csv
+    sh video_list_csv.sh /path/to/archive/dir/ > ~/archive.csv
     ```
     Or
     ```bash
-    ./archive_list.sh /path/to/archive/dir/ > ~/archive.csv
+    ./video_list_csv.sh /path/to/archive/dir/ > ~/archive.csv
     ```
 1. Import `archive.csv` into your spreadseet program.
 1. Copy the cells from the imported CSV data and paste it into your archive sheet at cell `A4`.
@@ -77,15 +77,27 @@ cd video_list_csv && cp example.env .env
 
 ## CLI Options
 
+CLI options allow you to override the values in `.env`:
+
+* `-a, --trim-release-type` Trim any `Release type` words from the `Edition column` (0 or 1).
+* `-a, --trim-resolution` Trim any `Resolution` words from the `Edition column` (0 or 1).
 * `-h, -?, --help` Display the help text.
 * `-s, --scanner` Set the scanner program (`ffprobe` or `mediainfo`).
 * `-t, --type` Set the archive type (`tv` or `movie`).
+* `-f, --force` Force detect the media metadata from the file (0 or 1).
+* `-d, --detect` Detect the media metadata if not in the filename (0 or 1).
+* `-e, --season` Display season only when episodes #1 (0 or 1).
+* `-r, --series` Display series only when season #1 and episode #1 (0 or 1).
+* `-x, --movie_columns` Define the Movie columns.
+* `-z, --tv_columns` Define the TV columns.
 
 # .env options
 
 * `scanner`: (`ffprobe`, `mediainfo`) Select the preferred scanning program globally. If not set, then ffprobe takes preference but will fallback to mediainfo if it's not deteced detected. This can be overriden by CLI args.
 * `type`: (`tv` or `movie`) Set the archive media type globally.
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
+* `trim_release_type`: (0 or 1) Trim any `Release type` words from the `Edition column`.
+* `trim_resolution`: (0 or 1) Trim any `Resolution` words from the `Edition column`.
 * `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the `Resolution`/`Video`/`Audio` columns).
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.
@@ -108,7 +120,7 @@ The possible columns are:
 * `Year`: Relese date
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
 * `Video`: The video codec and colouration streams, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
-* `Audio`: The audio codec and channel layout
+* `Audio`: The audio codec, channel layout and language
 * `Subtitles`: (**not in the default configuration**) The list of subtitle srteam/s.s
 * `Release Type`: (**not in the default configuration**) Pirated release type - NOT recommended
 * `Size (GB)`: File size in GB
@@ -135,11 +147,11 @@ If the script falls-back to probing the video file:
 
 * If there is only one stream, it will list only the codec, as if it were in the filename, eg:
     ```
-    "AVC DV HDR10+"
+    "AVC DV HDR10+ (en)"
     ```
 * If there are multiple streams, it will list each stream number and its codec in a comma separated list, eg:
     ```
-    "stream_1: DTS 5.1, stream_2: AC3 2.0"
+    "stream_1: DTS 5.1 (en), stream_2: AC3 2.0 (za)"
     ```
 
 # Testing
@@ -164,9 +176,13 @@ Checking ./includes/ffprobe.sh
 OK
 Checking ./includes/functions.sh
 OK
+Checking ./includes/archive_list.sh
+OK
 Checking ./includes/mediainfo.sh
 OK
 Checking ./includes/progressbar.sh
+OK
+Checking ./video_list_csv.sh
 OK
 Checking ./test.sh
 OK
