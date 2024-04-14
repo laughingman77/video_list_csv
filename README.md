@@ -79,6 +79,8 @@ cd video_list_csv && cp example.env .env
 
 CLI options allow you to override the values in `.env`:
 
+* `-a, --trim-release-type` Trim any `Release type` words from the `Edition column` (0 or 1).
+* `-a, --trim-resolution` Trim any `Resolution` words from the `Edition column` (0 or 1).
 * `-h, -?, --help` Display the help text.
 * `-s, --scanner` Set the scanner program (`ffprobe` or `mediainfo`).
 * `-t, --type` Set the archive type (`tv` or `movie`).
@@ -94,6 +96,8 @@ CLI options allow you to override the values in `.env`:
 * `scanner`: (`ffprobe`, `mediainfo`) Select the preferred scanning program globally. If not set, then ffprobe takes preference but will fallback to mediainfo if it's not deteced detected. This can be overriden by CLI args.
 * `type`: (`tv` or `movie`) Set the archive media type globally.
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
+* `trim_release_type`: (0 or 1) Trim any `Release type` words from the `Edition column`.
+* `trim_resolution`: (0 or 1) Trim any `Resolution` words from the `Edition column`.
 * `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the `Resolution`/`Video`/`Audio` columns).
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.

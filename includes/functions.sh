@@ -8,6 +8,12 @@ show_help() {
     echo 'Usage: "./video_list_csv.sh [-Options...] DirPath"'
     echo
     echo 'Options:'
+    echo '--trim-release-type, -a'
+    echo '      [0,1] Trim the "Release type" from the "Edition" column'
+    echo '      Overrides "trim_release_type"'
+    echo '--trim-resolution, -b'
+    echo '      [0,1] Trim the "Resolution" from the "Edition" column'
+    echo '      Overrides "trim_resolution"'
     echo '--help, -h, -?'
     echo '      Display this help and exit'
     echo '--scanner, -s'

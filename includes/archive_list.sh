@@ -201,6 +201,54 @@ while :; do
             printf 'ERROR: "--type" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
+        -a|--trim-release-type)
+            if [ -n "$2" ]; then
+                trim_release_type=$2
+                shift
+            else
+                printf 'ERROR: "--trim-release-type" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$trim_release_type" != '0' ] && [ "$trim_release_type" != '1' ]; then
+                printf 'ERROR: "--trim-release-type" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --trim-release-type=?*)
+            trim_release_type=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$trim_release_type" != '0' ] && [ "$trim_release_type" != '1' ]; then
+                printf 'ERROR: "--trim-release-type" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --trim-release-type=) # Handle the case of an empty --file=
+            printf 'ERROR: "--trim-release-type" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
+        -b|--trim-resolution)
+            if [ -n "$2" ]; then
+                trim_resolution=$2
+                shift
+            else
+                printf 'ERROR: "--trim-resolution" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$trim_resolution" != '0' ] && [ "$trim_resolution" != '1' ]; then
+                printf 'ERROR: "--trim-resolution" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --trim-resolution=?*)
+            trim_resolution=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$trim_resolution" != '0' ] && [ "$trim_resolution" != '1' ]; then
+                printf 'ERROR: "--trim-resolution" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --trim-resolution=) # Handle the case of an empty --file=
+            printf 'ERROR: "--trim-resolution" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
         --) # End of all options.
             shift
             break
@@ -356,6 +404,12 @@ while IFS= read -r filepath; do
                 [ -z "$field" ] && field=$(echo "$trimmed" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Fallback
                 [ -z "$field" ] && field=$(echo "$trimmed" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
+                if [ -n "$trim_resolution" ] && [ "$trim_resolution" -eq 1 ]; then
+                    field=$(echo "$field" | sed -n 's/1080p//gIp' | sed -n 's/2160p//gIp' | sed 's/  / /g')
+                fi
+                if [ -n "$trim_release_type" ] && [ "$trim_release_type" -eq 1 ]; then
+                    field=$(echo "$field" | sed 's/\(digital distribution copy\|r5\|webcap\|dvd-rip\|telesync\|screener\|cam\|dvd-r\|hdtv\|hs hd-rip\|hdrip\|webrip\|web-dl\|blu-ray\|bdrip\|brrip\|remux\)//gI' | sed 's/  / /g')
+                fi
                 ;;
             'Video')
                 codec=''
