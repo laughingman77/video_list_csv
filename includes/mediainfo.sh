@@ -108,7 +108,7 @@ video() {
 #   foobar=$(audio "$metadata")
 audio() {
     _metadata=$1
-    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Profile: .Format_Profile, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels}')
+    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Profile: .Format_Profile, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels, Language: .Language}')
     _linecount=$(echo "$_audio_streams" | wc -l)
     _result=''
     IFS='
@@ -117,6 +117,7 @@ audio() {
         # Extract field values for a stream
         _id=$(echo "$_audio_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _channels=$(echo "$_audio_stream" | sed -n 's/.*"Channels":"\([0-9]*\)".*/\1/p')
+        _language=$(echo "$_audio_stream" | sed -n 's/.*"Language":"\([^"]*\)".*/\1/p')
         test "$_channels" = '1' && _channels='1.0'
         test "$_channels" = '2' && _channels='2.0'
         test "$_channels" = '4' && _channels='3.1'
@@ -139,7 +140,7 @@ audio() {
         test -n "$_format_commercial_ifany" && _format="$_format_commercial_ifany"
         # Concatenate the stream info parts into the field
         test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
-        _result="${_result}${_format} ${_channels}, "
+        _result="${_result}${_format} ${_channels} (${_language}), "
     done
     # Strip trailing characters and bad spaces
     _result=$(echo "$_result" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
