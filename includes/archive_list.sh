@@ -403,12 +403,12 @@ while IFS= read -r filepath; do
                 # Edition after date in brackets, tmdbid/imdbid in square brackets and hyphen (jellyin)
                 [ -z "$field" ] && field=$(echo "$trimmed" | sed -nr 's/.*\([0-9]{4}\)\ \[[t|i]mdbid-.*\]\ -\ (.*)/\1/p' | tr '[:upper:]' '[:lower:]')
                 # Fallback
-                [ -z "$field" ] && field=$(echo "$trimmed" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | sed 's/^\ //' | sed 's/\ $//' | tr '[:upper:]' '[:lower:]')
+                [ -z "$field" ] && field=$(echo "$trimmed" | grep -E -io '(remastered|theatrical cut|special edition|cinematic cut|extended cut|director'\''?s cut|producer'\''?s cut|unrated|uncut)' | sed 's/^ *//;s/ *$//' | tr '[:upper:]' '[:lower:]')
                 if [ -n "$trim_resolution" ] && [ "$trim_resolution" -eq 1 ]; then
-                    field=$(echo "$field" | sed -n 's/1080p//gIp' | sed -n 's/2160p//gIp' | sed 's/  / /g')
+                    field=$(echo "$field" | sed 's/1080p//gI' | sed 's/2160p//gI' | sed 's/ \{2,\}/ /g' | sed 's/^ *//;s/ *$//')
                 fi
                 if [ -n "$trim_release_type" ] && [ "$trim_release_type" -eq 1 ]; then
-                    field=$(echo "$field" | sed 's/\(digital distribution copy\|r5\|webcap\|dvd-rip\|telesync\|screener\|cam\|dvd-r\|hdtv\|hs hd-rip\|hdrip\|webrip\|web-dl\|blu-ray\|bdrip\|brrip\|remux\)//gI' | sed 's/  / /g')
+                    field=$(echo "$field" | sed 's/\(digital distribution copy\|r5\|webcap\|dvd-rip\|telesync\|screener\|cam\|dvd-r\|hdtv\|hs hd-rip\|hdrip\|webrip\|web-dl\|blu-ray\|bdrip\|brrip\|remux\)//gI' | sed 's/ \{2,\}/ /g' | sed 's/^ *//;s/ *$//')
                 fi
                 ;;
             'Video')
