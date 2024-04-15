@@ -82,6 +82,7 @@ CLI options allow you to override the values in `.env`:
 * `-a, --trim-release-type` Trim any `Release type` words from the `Edition column` (0 or 1).
 * `-b, --trim-resolution` Trim any `Resolution` words from the `Edition column` (0 or 1).
 * `-h, -?, --help` Display the help text.
+* `-i, --default-stream`: Display only the default streams for audio and video (0,1).
 * `-s, --scanner` Set the scanner program (`ffprobe` or `mediainfo`).
 * `-t, --type` Set the archive type (`tv` or `movie`).
 * `-f, --force` Force detect the media metadata from the file (0 or 1).
