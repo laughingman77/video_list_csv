@@ -100,15 +100,17 @@ video() {
 # Return the codecs of each audio stream in a video file, using pre-generated JSON metadata.
 # @see video_data()
 #
-# $1 _metadata mediainfo JSON
+# $1 _metadata ffprobe JSON
+# $2 _default_stream Display default stream
 #
 # @returns Video codec string
 #
 # Example:
-#   foobar=$(audio "$metadata")
+#   foobar=$(audio "$metadata" "1")
 audio() {
     _metadata=$1
-    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Profile: .Format_Profile, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels, Language: .Language}')
+    _default_stream=$2
+    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Profile: .Format_Profile, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels, Language: .Language, Default: .Default}')
     _linecount=$(echo "$_audio_streams" | wc -l)
     _result=''
     IFS='
@@ -118,29 +120,34 @@ audio() {
         _id=$(echo "$_audio_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _channels=$(echo "$_audio_stream" | sed -n 's/.*"Channels":"\([0-9]*\)".*/\1/p')
         _language=$(echo "$_audio_stream" | sed -n 's/.*"Language":"\([^"]*\)".*/\1/p')
-        test "$_channels" = '1' && _channels='1.0'
-        test "$_channels" = '2' && _channels='2.0'
-        test "$_channels" = '4' && _channels='3.1'
-        test "$_channels" = '5' && _channels='4.1'
-        test "$_channels" = '6' && _channels='5.1'
-        test "$_channels" = '7' && _channels='6.1'
-        test "$_channels" = '8' && _channels='7.1'
-        _format_profile=$(echo "$_audio_stream" | sed -n 's/.*"Format_Profile":"\([^"]*\)".*/\1/p')
-        _format=$(echo "$_audio_stream" | sed -n 's/.*"Format":"\([^"]*\)".*/\1/p')
-        if [ "${_format#*"MPEG Audio"}" != "$_format" ]; then
-            _format='MP'$(echo "$_format_profile" | sed -n 's/Layer \([0-9]*\)/\1/p')
+        _default=$(echo "$_audio_stream" | sed -n 's/.*"Default":"\([^"]*\)".*/\1/p')
+        if [ "$_default_stream" -eq 0 ] || [ "$_default" = 'Yes' ]; then
+            test "$_channels" = '1' && _channels='1.0'
+            test "$_channels" = '2' && _channels='2.0'
+            test "$_channels" = '4' && _channels='3.1'
+            test "$_channels" = '5' && _channels='4.1'
+            test "$_channels" = '6' && _channels='5.1'
+            test "$_channels" = '7' && _channels='6.1'
+            test "$_channels" = '8' && _channels='7.1'
+            _format_profile=$(echo "$_audio_stream" | sed -n 's/.*"Format_Profile":"\([^"]*\)".*/\1/p')
+            _format=$(echo "$_audio_stream" | sed -n 's/.*"Format":"\([^"]*\)".*/\1/p')
+            if [ "${_format#*"MPEG Audio"}" != "$_format" ]; then
+                _format='MP'$(echo "$_format_profile" | sed -n 's/Layer \([0-9]*\)/\1/p')
+            fi
+            _format_commercial_ifany=$(echo "$_audio_stream" | sed -n 's/.*"Format_Commercial_IfAny":"\([^"]*\)".*/\1/p')
+            test "${_format_commercial_ifany#*"Dolby Digital Plus"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DD+'
+            test "${_format_commercial_ifany#*"Dolby Digital"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DD'
+            test "${_format_commercial_ifany#*"DTS-HD High Resolution Audio"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DTS-HD'
+            test "${_format_commercial_ifany#*"DTS-HD Master Audio"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DTS-HD MA'
+            test "${_format_commercial_ifany#*"Atmos"}" != "$_format_commercial_ifany" && _format_commercial_ifany='Atmos'
+            test "${_format_commercial_ifany#*"TrueHD"}" != "$_format_commercial_ifany" && _format_commercial_ifany='TrueHD'
+            test -n "$_format_commercial_ifany" && _format="$_format_commercial_ifany"
+            # Concatenate the stream info parts into the field
+            if [ "$_linecount" -gt 1 ] && [ "$_default_stream" -eq 0 ]; then
+                _result="${_result}stream_${_id}: "
+            fi
+            _result="${_result}${_format} ${_channels} (${_language}), "
         fi
-        _format_commercial_ifany=$(echo "$_audio_stream" | sed -n 's/.*"Format_Commercial_IfAny":"\([^"]*\)".*/\1/p')
-        test "${_format_commercial_ifany#*"Dolby Digital Plus"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DD+'
-        test "${_format_commercial_ifany#*"Dolby Digital"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DD'
-        test "${_format_commercial_ifany#*"DTS-HD High Resolution Audio"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DTS-HD'
-        test "${_format_commercial_ifany#*"DTS-HD Master Audio"}" != "$_format_commercial_ifany" && _format_commercial_ifany='DTS-HD MA'
-        test "${_format_commercial_ifany#*"Atmos"}" != "$_format_commercial_ifany" && _format_commercial_ifany='Atmos'
-        test "${_format_commercial_ifany#*"TrueHD"}" != "$_format_commercial_ifany" && _format_commercial_ifany='TrueHD'
-        test -n "$_format_commercial_ifany" && _format="$_format_commercial_ifany"
-        # Concatenate the stream info parts into the field
-        test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
-        _result="${_result}${_format} ${_channels} (${_language}), "
     done
     # Strip trailing characters and bad spaces
     _result=$(echo "$_result" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')

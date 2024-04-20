@@ -115,14 +115,16 @@ video() {
 # @see video_data()
 #
 # $1 _metadata ffprobe JSON
+# $2 _default_stream Display default stream
 #
 # @returns Video codec string
 #
 # Example:
-#   foobar=$(audio "$metadata")
+#   foobar=$(audio "$metadata" 1)
 audio() {
     _metadata=$1
-    _audio_streams=$(echo "$_metadata" | jq -c '.streams[] | select(.codec_type == "audio") | { ID: .index, profile: .profile, codec_long_name: .codec_long_name, channel_layout: .channel_layout, channels: .channels, language: .tags.language}')
+    _default_stream=$2
+    _audio_streams=$(echo "$_metadata" | jq -c '.streams[] | select(.codec_type == "audio") | { ID: .index, profile: .profile, codec_long_name: .codec_long_name, channel_layout: .channel_layout, channels: .channels, language: .tags.language, default: .disposition.default }')
     _linecount=$(echo "$_audio_streams" | wc -l)
     _result=''
     IFS='
@@ -133,32 +135,39 @@ audio() {
         _profile=$(echo "$_audio_stream" | sed -n 's/.*"profile":"\([^"]*\)".*/\1/p')
         _codec_long_name=$(echo "$_audio_stream" | sed -n 's/.*"codec_long_name":"\([^"]*\)".*/\1/p')
         _language=$(echo "$_audio_stream" | sed -n 's/.*"language":"\([^"]*\)".*/\1/p')
-        test -n "$_profile" && _codec="$_profile" || _codec="$_codec_long_name"
-        test "${_codec#*"PCM"}" != "$_codec" && _codec='PCM'
-        test "${_codec#*"Atmos"}" != "$_codec" && _codec='Atmos'
-        test "${_codec#*"DTS:X"}" != "$_codec" && _codec='DTS:X'
-        test "${_codec#*"AC-3"}" != "$_codec" && _codec='AC-3'
-        test "${_codec#*"Opus"}" != "$_codec" && _codec='Opus'
-        test "${_codec#*"Windows Media Audio"}" != "$_codec" && _codec='WMA'
-        test "${_codec#*"MP2"}" != "$_codec" && _codec='MP2'
-        test "${_codec#*"MP3"}" != "$_codec" && _codec='MP3'
-        test "${_codec#*"FLAC"}" != "$_codec" && _codec='FLAC'
-        test "${_codec_long_name#*"AAC"}" != "$_codec_long_name" && _codec='AAC'
-        test "${_codec_long_name#*"PCM"}" != "$_codec_long_name" && _codec='PCM'
-        _channel_layout=$(echo "$_audio_stream" | sed -n 's/.*"channel_layout":"\([^"]*\)".*/\1/p' | sed 's/(side)//' | sed 's/stereo/2.0/' | sed 's/mono/1.0/')
-        if [ -z "$_channel_layout" ]; then
-            _channel_layout=$(echo "$_audio_stream" | sed 's/.*"channels":\([0-9]*\).*/\1/')
-            test "$_channel_layout" = '1' && _channel_layout='1.0'
-            test "$_channel_layout" = '2' && _channel_layout='2.0'
-            test "$_channel_layout" = '4' && _channel_layout='3.1'
-            test "$_channel_layout" = '5' && _channel_layout='4.1'
-            test "$_channel_layout" = '6' && _channel_layout='5.1'
-            test "$_channel_layout" = '7' && _channel_layout='6.1'
-            test "$_channel_layout" = '8' && _channel_layout='7.1'
+        _default=$(echo "$_audio_stream" | sed -n 's/.*"default":\([0-9]*\).*/\1/p')
+        if [ "$_default_stream" -eq 0 ] || [ "$_default" -eq 1 ]; then
+            test -n "$_profile" && _codec="$_profile" || _codec="$_codec_long_name"
+            test "${_codec#*"PCM"}" != "$_codec" && _codec='PCM'
+            test "${_codec#*"Atmos"}" != "$_codec" && _codec='Atmos'
+            test "${_codec#*"DTS:X"}" != "$_codec" && _codec='DTS:X'
+            test "${_codec#*"AC-3"}" != "$_codec" && _codec='AC-3'
+            test "${_codec#*"Opus"}" != "$_codec" && _codec='Opus'
+            test "${_codec#*"Windows Media Audio"}" != "$_codec" && _codec='WMA'
+            test "${_codec#*"MP2"}" != "$_codec" && _codec='MP2'
+            test "${_codec#*"MP3"}" != "$_codec" && _codec='MP3'
+            test "${_codec#*"FLAC"}" != "$_codec" && _codec='FLAC'
+            test "${_codec_long_name#*"AAC"}" != "$_codec_long_name" && _codec='AAC'
+            test "${_codec_long_name#*"PCM"}" != "$_codec_long_name" && _codec='PCM'
+            _channel_layout=$(echo "$_audio_stream" | sed -n 's/.*"channel_layout":"\([^"]*\)".*/\1/p' | sed 's/(side)//' | sed 's/stereo/2.0/' | sed 's/mono/1.0/')
+            if [ -z "$_channel_layout" ]; then
+                _channel_layout=$(echo "$_audio_stream" | sed 's/.*"channels":\([0-9]*\).*/\1/')
+                test "$_channel_layout" = '1' && _channel_layout='1.0'
+                test "$_channel_layout" = '2' && _channel_layout='2.0'
+                test "$_channel_layout" = '4' && _channel_layout='3.1'
+                test "$_channel_layout" = '5' && _channel_layout='4.1'
+                test "$_channel_layout" = '6' && _channel_layout='5.1'
+                test "$_channel_layout" = '7' && _channel_layout='6.1'
+                test "$_channel_layout" = '8' && _channel_layout='7.1'
+            fi
+            # Concatenate the stream info parts into the field
+            if [ "$_linecount" -gt 1 ] && [ "$_default_stream" -eq 0 ]; then
+                _result="${_result}stream_${_id}: "
+            fi
+            _result="${_result}${_codec} ${_channel_layout}"
+            test ! "$_language" = '' && _result="${_result} (${_language})"
+            _result="${_result}, "
         fi
-        # Concatenate the stream info parts into the field
-        test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
-        _result="${_result}${_codec} ${_channel_layout} (${_language}), "
     done
     # Strip trailing characters and bad spaces
     _result=$(echo "$_result" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')

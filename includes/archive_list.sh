@@ -249,6 +249,30 @@ while :; do
             printf 'ERROR: "--trim-resolution" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
+        -i|--default-stream)
+            if [ -n "$2" ]; then
+                default_stream=$2
+                shift
+            else
+                printf 'ERROR: "--default-stream" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$default_stream" != '0' ] && [ "$default_stream" != '1' ]; then
+                printf 'ERROR: "--default-stream" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --default-stream=?*)
+            trim_resolution=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$default_stream" != '0' ] && [ "$default_stream" != '1' ]; then
+                printf 'ERROR: "--default-stream" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --default-stream=) # Handle the case of an empty --file=
+            printf 'ERROR: "--default-stream" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
         --) # End of all options.
             shift
             break
@@ -520,7 +544,7 @@ while IFS= read -r filepath; do
                 ( echo "$spaced_filename" | grep -iq ' ape ' ) && codec='APE'
                 if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1 && { test -z "$codec" || test -z "$channel_layout"; }; }; then
                     [ -z "$metadata" ] && metadata=$(video_data "$filepath")
-                    field=$(audio "$metadata")
+                    field=$(audio "$metadata" "$default_stream")
                 else
                     field="$codec $channel_layout"
                 fi
