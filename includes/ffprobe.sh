@@ -120,7 +120,7 @@ video() {
 # @returns Video codec string
 #
 # Example:
-#   foobar=$(audio "$metadata" 1)
+#   foobar=$(audio "$metadata" "1")
 audio() {
     _metadata=$1
     _default_stream=$2
