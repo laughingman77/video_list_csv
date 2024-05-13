@@ -415,7 +415,7 @@ while IFS= read -r filepath; do
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
                 if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1  && test -z "$field"; }; then
                     [ -z "$metadata" ] && metadata=$(video_data "$filepath")
-                    field=$(resolution "$metadata")
+                    field=$(resolution "$metadata" "$default_stream")
                 fi
                 ;;
             'Edition')
@@ -490,7 +490,7 @@ while IFS= read -r filepath; do
                 ( echo "$spaced_filename" | grep -iq ' hdr10+ ' ) && codec_features="$codec_features HDR10+"
                 if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; }; then
                     [ -z "$metadata" ] && metadata=$(video_data "$filepath")
-                    field=$(video "$metadata")
+                    field=$(video "$metadata" "$default_stream")
                 else
                     field="${codec}${codec_features}"
                 fi
