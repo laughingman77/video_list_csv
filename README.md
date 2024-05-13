@@ -99,6 +99,7 @@ CLI options allow you to override the values in `.env`:
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
 * `trim_release_type`: (0 or 1) Trim any `Release type` words from the `Edition column`.
 * `trim_resolution`: (0 or 1) Trim any `Resolution` words from the `Edition column`.
+* `default_stream`: Only display the default streams (reverts to diplsaying all streams if no stream set to default). This affects the `Audio`, `Video` and `Resolution` columns.
 * `force_detect`: (0 or 1) Force detection of the video streams on all videos (this will override `detect_if_not_in_filename` and ignore any values found in the filename for the `Resolution`/`Video`/`Audio` columns).
 * `display_season_for_1`: (0 or 1) Only extract the season number if the episode is `01`, it makes a TV list more readable.
 * `display_series_for_1`: (0 or 1) Only extract the series name if the season and episode are `01`, it makes a TV list more readable.
