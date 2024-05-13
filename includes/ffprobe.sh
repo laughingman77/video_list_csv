@@ -61,7 +61,7 @@ resolution() {
         test "$_width" -gt 1920 && _resolution='2160p'
         test "$_width" -gt 3840 && _resolution='4320p'
         # Concatenate info parts into the field line
-        if [ "$_default"  -eq 1 ]; then
+        if [ "$_default"  -eq 1 ] || [ "$_linecount" -eq 1 ]; then
             _result="${_resolution}"
         fi
         _results="${_results}stream_${_id}: ${_resolution}, "
@@ -119,7 +119,7 @@ video() {
         fi
         # @TODO 3D, HDR10, HDR10+
         # Concatenate the stream info parts into the field
-        if [ "$_default" -eq 1 ]; then
+        if [ "$_default" -eq 1 ] || [ "$_linecount" -eq 1 ]; then
             _result="${_codec} ${_additional_info}"
             if [ -n "$_additional_info" ]; then
                 _result="${_result} ${_additional_info}"
@@ -194,7 +194,7 @@ audio() {
         fi
         test ! "$_language" = '' && _language=" (${_language})"
         # Concatenate the stream info parts into the field
-        if [ "$_default"  -eq 1 ]; then
+        if [ "$_default"  -eq 1 ] || [ "$_linecount" -eq 1 ]; then
             _result="${_codec} ${_channel_layout}${_language}"
         fi
         _results="${_results}stream_${_id}: ${_codec} ${_channel_layout}${_language}, "
