@@ -18,22 +18,26 @@ video_data() {
 # @see video_data()
 #
 # $1 _metadata mediainfo JSON
+# $2 _default_stream Display default stream
 #
 # @returns Resolution string
 #
 # Example:
-#   foobar=$(resolution "$metadata")
+#   foobar=$(resolution "$metadata" 0)
 resolution() {
     _metadata=$1
-    _video_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Width: .Width}')
+    _default_stream=$2
+    _video_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Width: .Width, Default: .Default}')
     _linecount=$(echo "$_video_streams" | wc -l)
     _result=''
+    _results=''
     IFS='
 '
     for _video_stream in $_video_streams; do
         # Extract field values for a stream
         _id=$(echo "$_video_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _width=$(echo "$_video_stream" | sed -n 's/.*"Width":"\([^"]*\)".*/\1/p')
+        _default=$(echo "$_video_stream" | sed -n 's/.*"Default":"\([^"]*\)".*/\1/p')
         # Map width to a resolution
         _resolution='480p'
         test "$_width" -gt 640 && _resolution='720p'
@@ -41,28 +45,38 @@ resolution() {
         test "$_width" -gt 1920 && _resolution='2160p'
         test "$_width" -gt 3840 && _resolution='4320p'
         # Concatenate info parts into the field line
-        test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
-        _result="${_result}${_resolution}, "
+        if [ "$_default"  = 'Yes' ] || [ "$_linecount" -eq 1 ]; then
+            _result="${_resolution}"
+        fi
+        _results="${_results}stream_${_id}: ${_resolution}, "
     done
     # Strip trailing characters and bad spaces
-    _result=$(echo "$_result" | sed 's/,\ $//')
-    echo "$_result"
+    _results=$(echo "$_result" | sed 's/,\ $//')
+    
+    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+        echo "$_result"
+    else
+        echo "$_results"
+    fi
 }
 
 # Return the codecs of each video stream in a video file, using pre-generated JSON metadata.
 # @see video_data()
 #
 # $1 _metadata mediainfo JSON
+# $2 _default_stream Display default stream
 #
 # @returns Video codec string
 #
 # Example:
-#   foobar=$(video "$metadata")
+#   foobar=$(video "$metadata" 1)
 video() {
     _metadata=$1
-    _video_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_Format: .HDR_Format, Format_Version: .Format_Version, HDR_Format_Compatibility: .HDR_Format_Compatibility}')
+    _default_stream=$2
+    _video_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Video") | {ID: .ID, Format: .Format, transfer_characteristics: .transfer_characteristics, HDR_Format: .HDR_Format, Format_Version: .Format_Version, HDR_Format_Compatibility: .HDR_Format_Compatibility, Default: .Default}')
     _linecount=$(echo "$_video_streams" | wc -l)
     _result=''
+    _results=''
     IFS='
 '
     for _video_stream in $_video_streams; do
@@ -70,6 +84,7 @@ video() {
         _id=$(echo "$_video_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _codec=$(echo "$_video_stream" | sed -n 's/.*"Format":"\([^"]*\)".*/\1/p')
         _format_version=$(echo "$_video_stream" | sed -n 's/.*"Format_Version":"\([^"]*\)".*/\1/p')
+        _default=$(echo "$_video_stream" | sed -n 's/.*"Default":"\([^"]*\)".*/\1/p')
         test "${_codec#*"MPEG-2"}" != "$_codec" && _codec='MPEG-2'
         test "${_codec#*"MPEG-4"}" != "$_codec" && _codec='MPEG-4'
         if [ "${_codec#*"MPEG Video"}" != "$_codec" ]; then
@@ -89,26 +104,35 @@ video() {
         ( echo "$_hdr_format_compatibility" | grep -ioq 'hdr10 ' ) && _additional_info="$_additional_info HDR10"
         ( echo "$_hdr_format_compatibility" | grep -ioq 'hdr10+ ' ) && _additional_info="$_additional_info HDR10+"
         # Concatenate the stream info parts into the field
-        test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
-        _result="${_result}${_codec}${_additional_info}, "
+        if [ "$_default"  = 'Yes' ] || [ "$_linecount" -eq 1 ]; then
+            _result="${_codec}${_additional_info}"
+        fi
+        _results="${_results}stream_${_id}: ${_codec}${_additional_info}, "
     done
     # Strip trailing characters and bad spaces
-    _result=$(echo "$_result" | sed 's/[\ ,]*$//'  | sed 's/\ ,\ /,\ /g')
-    echo "$_result"
+    _results=$(echo "$_result" | sed 's/[\ ,]*$//'  | sed 's/\ ,\ /,\ /g')
+    
+    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+        echo "$_result"
+    else
+        echo "$_results"
+    fi
 }
 
 # Return the codecs of each audio stream in a video file, using pre-generated JSON metadata.
 # @see video_data()
 #
-# $1 _metadata mediainfo JSON
+# $1 _metadata ffprobe JSON
+# $2 _default_stream Display default stream
 #
 # @returns Video codec string
 #
 # Example:
-#   foobar=$(audio "$metadata")
+#   foobar=$(audio "$metadata" "1")
 audio() {
     _metadata=$1
-    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Profile: .Format_Profile, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels, Language: .Language}')
+    _default_stream=$2
+    _audio_streams=$(echo "$_metadata" | jq -c '.media .track[] | select(."@type" == "Audio") | {ID: .ID, Format: .Format, Format_Profile: .Format_Profile, Format_Commercial_IfAny: .Format_Commercial_IfAny, Channels: .Channels, Language: .Language, Default: .Default}')
     _linecount=$(echo "$_audio_streams" | wc -l)
     _result=''
     IFS='
@@ -118,6 +142,8 @@ audio() {
         _id=$(echo "$_audio_stream" | sed -n 's/.*"ID":"\([0-9]*\)".*/\1/p')
         _channels=$(echo "$_audio_stream" | sed -n 's/.*"Channels":"\([0-9]*\)".*/\1/p')
         _language=$(echo "$_audio_stream" | sed -n 's/.*"Language":"\([^"]*\)".*/\1/p')
+        _default=$(echo "$_audio_stream" | sed -n 's/.*"Default":"\([^"]*\)".*/\1/p')
+        # Tidy Text for channels
         test "$_channels" = '1' && _channels='1.0'
         test "$_channels" = '2' && _channels='2.0'
         test "$_channels" = '4' && _channels='3.1'
@@ -138,13 +164,24 @@ audio() {
         test "${_format_commercial_ifany#*"Atmos"}" != "$_format_commercial_ifany" && _format_commercial_ifany='Atmos'
         test "${_format_commercial_ifany#*"TrueHD"}" != "$_format_commercial_ifany" && _format_commercial_ifany='TrueHD'
         test -n "$_format_commercial_ifany" && _format="$_format_commercial_ifany"
+
+        test ! "$_language" = '' && _language=" (${_language})"
+
         # Concatenate the stream info parts into the field
-        test "$_linecount" -gt 1 && _result="${_result}stream_${_id}: "
-        _result="${_result}${_format} ${_channels} (${_language}), "
+        if [ "$_default"  = 'Yes' ] || [ "$_linecount" -eq 1 ]; then
+            _result="${_format} ${_channels}${_language}"
+        fi
+        _results="${_results}stream_${_id}: ${_format} ${_channels}${_language}, "
+            
     done
     # Strip trailing characters and bad spaces
-    _result=$(echo "$_result" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
-    echo "$_result"
+    _results=$(echo "$_results" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
+
+    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+        echo "$_result"
+    else
+        echo "$_results"
+    fi
 }
 
 # Return the languages for each subtitle stream of a video file, using pre-generated JSON metadata.
