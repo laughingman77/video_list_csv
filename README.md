@@ -4,7 +4,7 @@
 
 This script recursively scans a directory and creates a CSV with details of all Movie and TV media in that directory and sub-directories. This is aimed towards Home Theatre enthusiasts and their archives. However it can be used for any directories containing video media.
 
-The script uses `ffprobe` or `mediainfo` to scan the library. It can automatically detect what library are present, or you can define what package you want to use as a CLI argument or globally in the `.env` file.
+The script uses `ffprobe` or `mediainfo` to scan the library. It can automatically detect which libraries are present, or you can define what package you want to use as a CLI argument or globally in the `.env` file.
 
 This is a POSIX compliant bash script. It will work on all Linux and Mac systems. Windows users will be able to run the script using WSL (see [How to run .sh or Shell Script file in Windows 11/10][wsl]) (untested).
 
@@ -61,7 +61,7 @@ cd video_list_csv && cp example.env .env
 # Usage
 
 1. Copy the `Movie Archive` spreadsheet into your home directory.
-1. In your spreadsheet clone, duplicate the `Archive Template` sheet, and give it a meaningful name.
+1. In your new spreadsheet, duplicate the `Archive Template` sheet, and give it a meaningful name.
 1. Run the script:
     ```bash
     sh video_list_csv.sh /path/to/archive/dir/ > ~/archive.csv
@@ -70,7 +70,7 @@ cd video_list_csv && cp example.env .env
     ```bash
     ./video_list_csv.sh /path/to/archive/dir/ > ~/archive.csv
     ```
-1. Import `archive.csv` into your spreadseet program.
+1. Import `archive.csv` into your spreadsheet program.
 1. Copy the cells from the imported CSV data and paste it into your archive sheet at cell `A4`.
 1. Select the cells for the media data and sort by the `Sort` column.
 1. Format the sheet to your preference.
@@ -82,19 +82,19 @@ CLI options allow you to override the values in `.env`:
 * `-a, --trim-release-type` Trim any `Release type` words from the `Edition column` (0 or 1).
 * `-b, --trim-resolution` Trim any `Resolution` words from the `Edition column` (0 or 1).
 * `-h, -?, --help` Display the help text.
-* `-i, --default-stream`: Display only the default streams for audio and video (0,1).
+* `-i, --default-stream`: Display only the default streams for audio and video (0 or 1).
 * `-s, --scanner` Set the scanner program (`ffprobe` or `mediainfo`).
 * `-t, --type` Set the archive type (`tv` or `movie`).
 * `-f, --force` Force detect the media metadata from the file (0 or 1).
 * `-d, --detect` Detect the media metadata if not in the filename (0 or 1).
-* `-e, --season` Display season only when episodes #1 (0 or 1).
-* `-r, --series` Display series only when season #1 and episode #1 (0 or 1).
+* `-e, --season` Display season only when episode is #1 (0 or 1).
+* `-r, --series` Display series only when season is #1 and episode is #1 (0 or 1).
 * `-x, --movie_columns` Define the Movie columns.
 * `-z, --tv_columns` Define the TV columns.
 
 # .env options
 
-* `scanner`: (`ffprobe`, `mediainfo`) Select the preferred scanning program globally. If not set, then ffprobe takes preference but will fallback to mediainfo if it's not deteced detected. This can be overriden by CLI args.
+* `scanner`: (`ffprobe`, `mediainfo`) Select the preferred scanning program globally. If not set, then ffprobe takes preference but will fallback to mediainfo if it's not detected.
 * `type`: (`tv` or `movie`) Set the archive media type globally.
 * `detect_if_not_in_filename`: (0 or 1) If the audio/audio formats or resolution are not detected in the filename, then automatically detect them.
 * `trim_release_type`: (0 or 1) Trim any `Release type` words from the `Edition column`.
