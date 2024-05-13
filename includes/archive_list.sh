@@ -263,7 +263,7 @@ while :; do
             fi
             ;;
         --default-stream=?*)
-            trim_resolution=${1#*=} # Delete everything up to "=" and assign the remainder.
+            default_stream=${1#*=} # Delete everything up to "=" and assign the remainder.
             if [ "$default_stream" != '0' ] && [ "$default_stream" != '1' ]; then
                 printf 'ERROR: "--default-stream" requires a value of 0 or 1.\n' >&2
                 exit 1
