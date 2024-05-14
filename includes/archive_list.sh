@@ -491,6 +491,7 @@ while IFS= read -r filepath; do
                 if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1 && test -z "$codec"; }; then
                     [ -z "$metadata" ] && metadata=$(video_data "$filepath")
                     field=$(video "$metadata" "$default_stream")
+                    # echo "$field";
                 else
                     field="${codec}${codec_features}"
                 fi

@@ -66,12 +66,12 @@ resolution() {
         fi
         _results="${_results}stream_${_id}: ${_resolution}, "
     done
-    # Strip trailing characters and bad spaces
-    _result=$(echo "$_result" | sed 's/,\ $//')
     
-    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+    if { [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; } || [ "$_linecount" -eq 1 ]; then
         echo "$_result"
     else
+        # Strip trailing characters and bad spaces
+        _results=$(echo "$_results" | sed 's/,\ $//')
         echo "$_results"
     fi
 }
@@ -120,7 +120,7 @@ video() {
         # @TODO 3D, HDR10, HDR10+
         # Concatenate the stream info parts into the field
         if [ "$_default" -eq 1 ] || [ "$_linecount" -eq 1 ]; then
-            _result="${_codec} ${_additional_info}"
+            _result="${_codec}"
             if [ -n "$_additional_info" ]; then
                 _result="${_result} ${_additional_info}"
             fi
@@ -131,12 +131,13 @@ video() {
         fi
         _results="${_results}, "
     done
-    # Strip trailing characters and bad spaces
-    _results=$(echo "$_results" | sed 's/,\ $//' | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
 
-    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+    if { [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; } || [ "$_linecount" -eq 1 ]; then
+        _result=$(echo "$_result" | sed 's/\ $//')
         echo "$_result"
     else
+        # Strip trailing characters and bad spaces
+        _results=$(echo "$_results" | sed 's/,\ $//' | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
         echo "$_results"
     fi
 }
@@ -199,12 +200,12 @@ audio() {
         fi
         _results="${_results}stream_${_id}: ${_codec} ${_channel_layout}${_language}, "
     done
-    # Strip trailing characters and bad spaces
-    _results=$(echo "$_results" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
 
-    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+    if { [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; } || [ "$_linecount" -eq 1 ]; then
         echo "$_result"
     else
+        # Strip trailing characters and bad spaces
+        _results=$(echo "$_results" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
         echo "$_results"
     fi
 }
