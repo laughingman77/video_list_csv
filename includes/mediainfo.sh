@@ -53,9 +53,11 @@ resolution() {
     # Strip trailing characters and bad spaces
     _results=$(echo "$_result" | sed 's/,\ $//')
     
-    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+    if { [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; } || [ "$_linecount" -eq 1 ]; then
         echo "$_result"
     else
+        # Strip trailing characters and bad spaces
+        _results=$(echo "$_results" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
         echo "$_results"
     fi
 }
@@ -112,9 +114,11 @@ video() {
     # Strip trailing characters and bad spaces
     _results=$(echo "$_result" | sed 's/[\ ,]*$//'  | sed 's/\ ,\ /,\ /g')
     
-    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+    if { [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; } || [ "$_linecount" -eq 1 ]; then
         echo "$_result"
     else
+        # Strip trailing characters and bad spaces
+        _results=$(echo "$_results" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
         echo "$_results"
     fi
 }
@@ -174,12 +178,12 @@ audio() {
         _results="${_results}stream_${_id}: ${_format} ${_channels}${_language}, "
             
     done
-    # Strip trailing characters and bad spaces
-    _results=$(echo "$_results" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
 
-    if [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; then
+    if { [ "$_default_stream" -eq 1 ] && [ ! "$_result" = '' ]; } || [ "$_linecount" -eq 1 ]; then
         echo "$_result"
     else
+        # Strip trailing characters and bad spaces
+        _results=$(echo "$_results" | sed 's/,\ $//'  | sed 's/\ ,\ /,\ /g' | sed 's/\ $//')
         echo "$_results"
     fi
 }
