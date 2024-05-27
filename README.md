@@ -60,7 +60,11 @@ cd video_list_csv && cp example.env .env
 
 # Usage
 
-1. Copy the `Movie Archive` spreadsheet into your home directory.
+## Spreadsheet
+
+Maintain a catalogue of your video media in a spreadsheet:
+
+1. Copy the `Movie Archive.xlsx` spreadsheet into your home directory.
 1. In your new spreadsheet, duplicate the `Archive Template` sheet, and give it a meaningful name.
 1. Run the script:
     ```bash
@@ -74,6 +78,10 @@ cd video_list_csv && cp example.env .env
 1. Copy the cells from the imported CSV data and paste it into your archive sheet at cell `A4`.
 1. Select the cells for the media data and sort by the `Sort` column.
 1. Format the sheet to your preference.
+
+## Tellico
+
+Maintain a catalogue of your video media in Tellico, see [tellico/README.md](./tellico/README.md).
 
 ## CLI Options
 
@@ -119,18 +127,24 @@ The possible columns are:
 * `Series`: (Only for **TV series**) the TV series title.
 * `Season`: (Only for **TV series**) the TV series season.
 * `Episode`: (Only for **TV series**) the TV series episode.
-* `Year`: Relese date
-* `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc)
-* `Video`: The video codec and colouration streams, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc
-* `Audio`: The audio codec, channel layout and language
-* `Subtitles`: (**not in the default configuration**) The list of subtitle srteam/s.s
-* `Release Type`: (**not in the default configuration**) Pirated release type - NOT recommended
-* `Size (GB)`: File size in GB
-* `Size (MB)`: File size in MB
-* `Size (KB)`: File size in KB
-* `Size (B)`: File size in B
-* `Filename`: Filename
-* `Full Path`: Absolute filepath and filename (this includes the mount path if the archive disk is an external disk)
+* `Number`: (Only for **TV series**) the TV series episode (this is for `Tellico` integration).
+* `Year`: Relese date.
+* `Production Year`: Relese date (this is for `Tellico` integration).
+* `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc).
+* `Aspect Ratio`: Video resolution (480p, 720p, 1080p, 2160, etc) (this is for `Tellico` integration).
+* `Video`: The video codec and colouration streams, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc.
+* `Video Tracks`: The video codec and colouration streams, ie. `DV`, `AVC`, `HEVC`, `HDR10+`, etc. (this is for `Tellico` integration).
+* `Audio`: The audio codec, channel layout and language.
+* `Audio Tracks`: The audio codec, channel layout and language (this is for `Tellico` integration).
+* `Subtitles`: (**not in the default configuration**) The list of subtitle srteam/s.
+* `Subtitle Languages`: (**not in the default configuration**) The list of subtitle srteam/s (this is for `Tellico` integration).
+* `Release Type`: (**not in the default configuration**) Pirated release type - NOT recommended.
+* `Size (GB)`: File size in GB.
+* `Size (MB)`: File size in MB.
+* `Size (KB)`: File size in KB.
+* `Size (B)`: File size in B.
+* `Filename`: Filename.
+* `Full Path`: Absolute filepath and filename (this includes the mount path if the archive disk is an external disk).
 
 # Directory and Filenames
 
