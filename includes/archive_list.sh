@@ -76,6 +76,30 @@ while :; do
             printf 'ERROR: "--detect" requires a non-empty option argument.\n' >&2
             exit 1
             ;;
+        --disk-summary)
+            if [ -n "$2" ]; then
+                disk_summary=$2
+                shift
+            else
+                printf 'ERROR: "--disk-summary" requires a non-empty option argument.\n' >&2
+                exit 1
+            fi
+            if [ "$disk_summary" != '0' ] && [ "$disk_summary" != '1' ]; then
+                printf 'ERROR: "--disk-summary" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --disk-summary=?*)
+            disk_summary=${1#*=} # Delete everything up to "=" and assign the remainder.
+            if [ "$disk_summary" != '0' ] && [ "$disk_summary" != '1' ]; then
+                printf 'ERROR: "--disk-summary" requires a value of 0 or 1.\n' >&2
+                exit 1
+            fi
+            ;;
+        --disk-summary=) # Handle the case of an empty --file=
+            printf 'ERROR: "--disk-summary" requires a non-empty option argument.\n' >&2
+            exit 1
+            ;;
         -e|--season)
             if [ -n "$2" ]; then
                 display_season_for_1=$2
@@ -390,11 +414,11 @@ while IFS= read -r filepath; do
                     field="$season"
                 fi
                 ;;
-            'Episode')
+            'Episode'|'Number')
                 [ -z "$episode" ] && episode=$(get_episode "$extra_season" "$extra_all" "$spaced_filename")
                 field="$episode"
                 ;;
-            'Year')
+            'Year'|'Production Year')
                 year=$(get_year "$spaced_filename")
                 # no year from filename, test parent directories
                 if [ -z "$year" ]; then
@@ -411,7 +435,7 @@ while IFS= read -r filepath; do
                 fi
                 field="$year"
                 ;;
-            'Resolution')
+            'Resolution'|'Aspect Ratio')
                 field=$(echo "$spaced_filename" | grep -oP '\d+p')
                 if { test -n "$force_detect" && test "$force_detect" -eq 1; } || { test "$detect_if_not_in_filename" -eq 1  && test -z "$field"; }; then
                     [ -z "$metadata" ] && metadata=$(video_data "$filepath")
@@ -435,7 +459,7 @@ while IFS= read -r filepath; do
                     field=$(echo "$field" | sed 's/\(digital distribution copy\|r5\|webcap\|dvd-rip\|telesync\|screener\|cam\|dvd-r\|hdtv\|hs hd-rip\|hdrip\|webrip\|web-dl\|blu-ray\|bdrip\|brrip\|remux\)//gI' | sed 's/ \{2,\}/ /g' | sed 's/^ *//;s/ *$//')
                 fi
                 ;;
-            'Video')
+            'Video'|'Video Tracks')
                 codec=''
                 codec_features=''
                 # H.261
@@ -496,7 +520,7 @@ while IFS= read -r filepath; do
                     field="${codec}${codec_features}"
                 fi
                 ;;
-            'Audio')
+            'Audio'|'Audio Tracks')
                 channel_layout=$(echo "$spaced_filename" | sed -n -r 's/.*\ ([0-9]\ [0-9]).*/\1/p' | tr ' ' '.')
                 codec=''
                 # DTS
@@ -550,7 +574,7 @@ while IFS= read -r filepath; do
                     field="$codec $channel_layout"
                 fi
                 ;;
-            'Subtitles')
+            'Subtitles'|'Subtitle Languages')
                 [ -z "$metadata" ] && metadata=$(video_data "$filepath")
                 field=$(subtitle "$metadata")
                 ;;
@@ -650,14 +674,16 @@ done
 output="$line,\"Sort\";$output"
 
 # Generate disk usage stats
-disk_usage=$(df -Ph "$dir" | tail -n 1)
-disk_size=$(echo "$disk_usage" | awk '{print $2}')
-disk_used=$(echo "$disk_usage" | awk '{print $3}')
-disk_avail=$(echo "$disk_usage" | awk '{print $4}')
-line="$disk_size,$disk_used,$disk_avail;;"
-output="${line}${output}"
-line='Size,Used,Free;'
-output="${line}${output}"
+if [ -z "$disk_summary" ] || [ "$disk_summary" -eq 1 ]; then
+    disk_usage=$(df -Ph "$dir" | tail -n 1)
+    disk_size=$(echo "$disk_usage" | awk '{print $2}')
+    disk_used=$(echo "$disk_usage" | awk '{print $3}')
+    disk_avail=$(echo "$disk_usage" | awk '{print $4}')
+    line="$disk_size,$disk_used,$disk_avail;;"
+    output="${line}${output}"
+    line='Size,Used,Free;'
+    output="${line}${output}"
+fi
 
 # Reset IFS
 IFS=${saveifs}
