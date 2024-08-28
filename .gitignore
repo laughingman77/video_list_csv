@@ -1,0 +1,26 @@
+# OSX system files
+.DS_Store
+.AppleDouble
+.AppleDB
+.AppleDesktop
+.apdisk
+
+# Windows system files
+thumbs.db
+ehthumbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Project files
+.vscode/
+*.bfproject
+*.code-workspace
+.idea/
+
+# Editor files
+*~
+.~lock.*#
+*.swp
+
+*.csv
+.env
