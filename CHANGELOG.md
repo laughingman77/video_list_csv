@@ -1,3 +1,5 @@
+## 9/11/2024
+* Added `Running Time` columns.
 # Tag v1.0.0
 ## 29/8/2024
 * Initial tag, recreation of `v3.4.4.1` from the old repository
