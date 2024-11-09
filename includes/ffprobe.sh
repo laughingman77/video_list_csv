@@ -255,18 +255,3 @@ running_time_s() {
     _seconds=$(echo "$_metadata" | jq -c '.format.duration' | sed 's/\.[0-9]*//g' | bc)
     echo "$_seconds"
 }
-
-# Return the running time in seconds of a video file, using pre-generated JSON metadata.
-# @see video_data()
-#
-# $1 _metadata ffprobe JSON
-#
-# @returns string of the runtime in seconds without any decimal places.
-#
-# Example:
-#   foobar=$(running_time "$metadata")
-running_time_s() {
-    _metadata=$1
-    _seconds=$(echo "$_metadata" | jq -c '.format.duration' | sed 's/\.[0-9]*//g' | bc)
-    echo "$_seconds"
-}
