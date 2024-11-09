@@ -224,3 +224,19 @@ subtitle() {
     _result=$(echo "$_metadata" | jq -c '[.streams[] | select(.codec_type == "subtitle") .tags .language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g')
     echo "$_result"
 }
+
+# Return the running time in minutes of a video file, using pre-generated JSON metadata.
+# @see video_data()
+#
+# $1 _metadata mediainfo JSON
+#
+# @returns string of the runtime in minutes without any decimal places.
+#
+# Example:
+#   foobar=$(running_time "$metadata")
+running_time() {
+    _metadata=$1
+    _seconds=$(echo "$_metadata" | jq -c '.format.duration')
+    _minutes=$(echo "${_seconds}/60" | sed 's/\.[0-9]*//g' | bc)
+    echo "$_minutes"
+}

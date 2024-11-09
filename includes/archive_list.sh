@@ -442,6 +442,52 @@ while IFS= read -r filepath; do
                     field=$(resolution "$metadata" "$default_stream")
                 fi
                 ;;
+            'Running Time (s)')
+                [ -z "$metadata" ] && metadata=$(video_data "$filepath")
+                field=$(running_time_s "$metadata")
+                ;;
+            'Running Time (m)')
+                [ -z "$metadata" ] && metadata=$(video_data "$filepath")
+                seconds=$(running_time_s "$metadata")
+                field=$(seconds_to_minutes "$seconds")
+                ;;
+            'Running Time (h)')
+                [ -z "$metadata" ] && metadata=$(video_data "$filepath")
+                seconds=$(running_time_s "$metadata")
+                field=$(seconds_to_hours "$seconds")
+
+                ;;
+            'Running Time (h/m)')
+                [ -z "$metadata" ] && metadata=$(video_data "$filepath")
+                seconds=$(running_time_s "$metadata")
+                minutes=$(seconds_to_minutes "$seconds")
+                hours=$(seconds_to_hours "$seconds")
+                minutes=$(echo "$minutes - ($hours * 60)" | sed 's/\.[0-9]*//g' | bc)
+                if [ -z "$minutes" ]; then
+                    minutes="0"
+                fi
+                field="${hours}h ${minutes}m"
+                ;;
+            'Running Time (h/m/s)')
+                [ -z "$metadata" ] && metadata=$(video_data "$filepath")
+                seconds=$(running_time_s "$metadata")
+                minutes=$(seconds_to_minutes "$seconds")
+                hours=$(seconds_to_hours "$seconds")
+                minutes=$(echo "$minutes - ($hours * 60)" | sed 's/\.[0-9]*//g' | bc)
+                seconds=$(echo "$seconds - (($hours * 60 * 60) + ($minutes * 60))" | sed 's/\.[0-9]*//g' | bc)
+                if [ -z "$minutes" ]; then
+                    minutes="0"
+                fi
+                if [ -z "$seconds" ]; then
+                    seconds="0"
+                fi
+                field="${hours}h ${minutes}m ${seconds}s"
+                ;;
+            'Running Time')
+                [ -z "$metadata" ] && metadata=$(video_data "$filepath")
+                seconds=$(running_time_s "$metadata")
+                field=$(seconds_to_minutes "$seconds")
+                ;;
             'Edition')
                 # Edition in curly brackets (Plex)
                 trimmed=$(trim_extension "$spaced_filename")
