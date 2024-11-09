@@ -65,7 +65,7 @@ resolution() {
 # Return the colour mode of each video stream in a video file, using pre-generated JSON metadata.
 # @see video_data()
 #
-# $1 _metadata ffrpobe JSON
+# $1 _metadata mediainfo JSON
 # $2 _default_stream Display default stream
 #
 # @returns Video colour mode string
@@ -169,7 +169,7 @@ video() {
 # Return the codecs of each audio stream in a video file, using pre-generated JSON metadata.
 # @see video_data()
 #
-# $1 _metadata ffprobe JSON
+# $1 _metadata mediainfo JSON
 # $2 _default_stream Display default stream
 #
 # @returns Video codec string
