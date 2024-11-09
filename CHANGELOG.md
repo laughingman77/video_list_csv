@@ -1,5 +1,7 @@
+# Tag v1.1.0
 ## 9/11/2024
 * Added `Running Time` columns.
+* Fixed edge case bug with colour_mode in ffprobe scanner mode
 # Tag v1.0.0
 ## 29/8/2024
 * Initial tag, recreation of `v3.4.4.1` from the old repository
