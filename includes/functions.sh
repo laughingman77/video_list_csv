@@ -298,3 +298,21 @@ get_episode() {
     fi
     echo "$_episode"
 }
+
+seconds_to_minutes() {
+    _seconds=$1
+    _minutes=$(echo "$_seconds / 60" | sed 's/\.[0-9]*//g' | bc)
+    if [ -z "$_minutes" ]; then
+        _minutes="0"
+    fi
+    echo "$_minutes"
+}
+
+seconds_to_hours() {
+    _seconds=$1
+    _hours=$(echo "$_seconds / 60 / 60" | sed 's/\.[0-9]*//g' | bc)
+    if [ -z "$_hours" ]; then
+        _hours="0"
+    fi
+    echo "$_hours"
+}

@@ -35,13 +35,13 @@ This script is intended for people who want to maintain an archive of legitmatel
 ### To use `ffprobe` (default scanner)
 
 ```bash
-sudo apt install git jq ffprobe
+sudo apt install git jq bc ffprobe
 ```
 
 ### To use `mediainfo`
 
 ```bash
-sudo apt install git jq mediainfo
+sudo apt install git jq bc mediainfo
 ```
 
 ## Clone the reposirory
@@ -128,6 +128,12 @@ The possible columns are:
 * `Production Year`: same as `Year` (this is for `Tellico` integration).
 * `Resolution`: Video resolution (480p, 720p, 1080p, 2160, etc).
 * `Video`: The video codec.
+* `Running Time`: The video running time in minutes (this is for `Tellico` integration).
+* `Running Time (s)`: The video running time in seconds.
+* `Running Time (m)`: The video running time in minutes.
+* `Running Time (h)`: The video running time in hours.
+* `Running Time (h/m)`: The video running time in hours and minutes.
+* `Running Time (h/m/s)`: The video running time in hours, minutes and seconds.
 * `Video Tracks`: Same as `Video` (this is for `Tellico` integration).
 * `Colour Mode`: The video coloration mode (ie. `HLG`, `DV`, `HDR`, `HDR10+`, etc).
 * `Audio`: The audio codec, channel layout and language.

@@ -76,6 +76,22 @@ resolution() {
     fi
 }
 
+# Return the colour mode of each video stream in a video file, using pre-generated JSON metadata.
+# @see ffprobe does not currently support this.
+#
+# $1 _metadata ffrpobe JSON
+# $2 _default_stream Display default stream
+#
+# @returns Video colour mode string
+#
+# Example:
+#   foobar=$(video "$colour_mode" 1)
+colour_mode() {
+    _metadata=$1
+    _default_stream=$2
+    echo ""
+}
+
 # Return the codecs of each video stream in a video file, using pre-generated JSON metadata.
 # @see video_data()
 #
@@ -223,4 +239,19 @@ subtitle() {
     _metadata=$1
     _result=$(echo "$_metadata" | jq -c '[.streams[] | select(.codec_type == "subtitle") .tags .language] | unique' | sed 's/,/,\ /g' | sed 's/[]["]//g')
     echo "$_result"
+}
+
+# Return the running time in seconds of a video file, using pre-generated JSON metadata.
+# @see video_data()
+#
+# $1 _metadata mediainfo JSON
+#
+# @returns string of the runtime in seconds without any decimal places.
+#
+# Example:
+#   foobar=$(running_time "$metadata")
+running_time_s() {
+    _metadata=$1
+    _seconds=$(echo "$_metadata" | jq -c '.format.duration' | sed 's/\.[0-9]*//g' | bc)
+    echo "$_seconds"
 }
