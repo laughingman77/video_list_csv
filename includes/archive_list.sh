@@ -1,5 +1,14 @@
 #!/bin/sh
 
+# Video filename extemstions
+extensions='m2ts|webm|mkv|flv|vob|ogv|ogg|rrc|gifv|mng|mov|avi|qt|wmv|yuv|asf|amv|mp4|m4p|m4v|mpg|mp2|mpeg|mpe|mpv|m4v|svi|3gp|3g2|mxf|roq|nsv|flv|f4v|f4p|f4a|f4b|mod'
+
+# Extras file suffixes
+extras_suffixes='trailer|sample|scene|clip|interview|behindthescenes|deleted|deletedscene|featurette|short|other|extra'
+
+# Extras directories
+extras_dirs='behind the scenes|deleted scenes|interviews|scenes|samples|shorts|featurettes|clips|other|extras|trailers|specials|season 00'
+
 saveifs=${IFS}
 
 # shellcheck disable=SC1091
@@ -339,9 +348,7 @@ printf "setting scanner to %s\n\n" "$scanner" 1>&2
 # shellcheck disable=SC1091
 . "./includes/${scanner}.sh" || exit 1
 
-
 # Create a regex of the extensions for the find command
-extensions='m2ts|webm|mkv|flv|vob|ogv|ogg|rrc|gifv|mng|mov|avi|qt|wmv|yuv|asf|amv|mp4|m4p|m4v|mpg|mp2|mpeg|mpe|mpv|m4v|svi|3gp|3g2|mxf|roq|nsv|flv|f4v|f4p|f4a|f4b|mod'
 extensions_re="\\($(echo "$extensions" | sed -r 's/\|/\\\|/g')\\)"
 
 filenames_file="$(mktemp)"
@@ -361,7 +368,7 @@ while IFS= read -r filepath; do
     progressbar "$processing_file" "$files_total" "$filename" >&2
     spaced_filename=$(echo "$filename" | sed 's/\./\ /g')
     extra_season=$(get_extra_season "$spaced_filename" "$filepath")
-    [ -z "$extra_season" ] && extra_all=$(get_extra_all "$spaced_filename" "$filepath") || extra_all=''
+    [ -z "$extra_season" ] && extra_all=$(get_extra_all "$spaced_filename" "$filepath" "$extras_dirs" "$extras_suffixes") || extra_all=''
     # Detect if dir contains movies or TV shows
     if [ -z "$columns" ]; then
         echo "$spaced_filename" | grep -Piq ' s\d{2}e\d{2} ' && columns="$tv_columns" || columns="$movie_columns"
@@ -375,11 +382,11 @@ while IFS= read -r filepath; do
             'Title')
                 title=$(get_title "$spaced_filename")
                 directory=$(get_directory "$filepath")
-                extras_suffix=$(get_extra_suffix "$spaced_filename")
+                extras_suffix=$(get_extra_suffix "$spaced_filename" "$extras_suffixes")
                 if [ "$(get_extra_special "$title")" ]; then
                     # Jellyfin extras special filename
-                    if [ "$(get_extra_dir "$directory")" ]; then
-                        # Edge case of extras special filename in an extras directory 
+                    if [ "$(get_extra_dir "$directory" "$extras_dirs")" ]; then
+                        # Edge case of extras special filename in an extras directory
                         parent_directory=$(get_directory "$filepath")
                         parent_directory=$(get_title "$parent_directory ")
                         title="$parent_directory - $directory - $title"
@@ -387,7 +394,7 @@ while IFS= read -r filepath; do
                         directory=$(get_title "$directory")
                         title="$directory - $title"
                     fi
-                elif [ -n "$(get_extra_dir "$directory")" ]; then
+                elif [ -n "$(get_extra_dir "$directory" "$extras_dirs")" ]; then
                     # Jellyfin/plex/kodi extras directory
                     parent_directory=$(get_parent_directory "$filepath")
                     parent_directory=$(get_title "$parent_directory ")
