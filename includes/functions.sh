@@ -135,35 +135,48 @@ get_extra_special() {
 
 # Extract the extras suffix from a filename (jellyfin/plex)
 # @param $1 _spaced_filename Filename with '.' replaced by ' '
+# @param $2 _extras_suffixes Suffix strings separated by '|'
 # @returns string|empty
 get_extra_suffix() {
     _spaced_filename="$1"
+    _extras_suffixes="$2"
     _spaced_filename=$(trim_extension "$_spaced_filename")
-    echo "$_spaced_filename" | sed -n 's/^.*[-_\ ]\(trailer\|sample\|scene\|clip\|interview\|behindthescenes\|deleted\|deletedscene\|featurette\|short\|other\|extra\)$/\1/Ip'
+    # Create a regex of the extra suffixes for the sed command
+    _extras_suffixes_re="s/^.*[-_\ ]\($(echo "$_extras_suffixes" | sed -r 's/\|/\\\|/g')\)$/\1/Ip"
+    _extra_suffix=$(echo "$_spaced_filename" | sed -n "$_extras_suffixes_re")
+    echo "$_extra_suffix"
 }
 
-# Detect if a directory is an extras directory (jellyfin/plex)
+# Detect if a directory is an extras directory (jellyfin/p lex)
 # @param $1 _dir_name Directory name
+# @param $2 _extras_dirs Directory names separated by '|'
 # @returns string|empty
 get_extra_dir() {
     _dir_name="$1"
-    _extra_dir=$(echo "$_dir_name" | grep -io '^behind the scenes$\|^deleted scenes$\|^interviews$\|^scenes$\|^samples$\|^shorts$\|^featurettes$\|^clips$\|^other$\|^extras$\|^trailers$\|^specials\|^season 00$')
+    _extras_dirs="$2"
+    # Create a regex of the extra dirs for the grep command
+    _extras_dirs_re="^$(echo "$_extras_dirs" | sed -r 's/\|/$\\\|^/g')$"
+    _extra_dir=$(echo "$_dir_name" | grep -io "$_extras_dirs_re")
     [ "$_extra_dir" = 'Season 00' ] && _extra_dir='extra'
     echo "$_extra_dir"
 }
 
 # Get a file extra type
 # @param $1 _spaced_filename Filename with '.' replaced by ' '
-# @param $2 _filepath
+# @param $2 _filepath Full filepath to the file
+# @param $3 _extras_dirs Directory names separated by '|'
+# @param $4 _extras_suffixes Suffix strings separated by '|'
 # @returns string|empty
 get_extra_all() {
     _spaced_filename="$1"
     _filepath="$2"
+    _extras_dirs="$3"
+    _extras_suffixes="$4"
     _extra=$(get_extra_special "$_spaced_filename")
-    [ -z "$_extra" ] && _extra=$(get_extra_suffix "$_spaced_filename")
+    [ -z "$_extra" ] && _extra=$(get_extra_suffix "$_spaced_filename" "$_extras_suffixes")
     if [ -z "$_extra" ]; then
         _dir=$(get_directory "$_filepath")
-        _extra=$(get_extra_dir "$_dir")
+        _extra=$(get_extra_dir "$_dir" "$_extras_dirs")
     fi
     echo "$_extra"
 }
@@ -299,6 +312,9 @@ get_episode() {
     echo "$_episode"
 }
 
+# Convert seconds to minutes. Dicard any fractions.
+# @param $1 _seconds seconds
+# @returns string
 seconds_to_minutes() {
     _seconds=$1
     _minutes=$(echo "$_seconds / 60" | sed 's/\.[0-9]*//g' | bc)
@@ -308,6 +324,9 @@ seconds_to_minutes() {
     echo "$_minutes"
 }
 
+# Convert seconds to hours. Dicard any fractions.
+# @param $1 _seconds seconds
+# @returns string
 seconds_to_hours() {
     _seconds=$1
     _hours=$(echo "$_seconds / 60 / 60" | sed 's/\.[0-9]*//g' | bc)
