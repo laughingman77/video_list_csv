@@ -1,3 +1,7 @@
+# Tag v1.1.1
+## 17/11/2024
+* Ensured Extras text format is the same with suffix and ditectory layout.
+* Updated the Tellico templates (Running time).
 # Tag v1.1.0
 ## 9/11/2024
 * Added `Running Time` columns.
